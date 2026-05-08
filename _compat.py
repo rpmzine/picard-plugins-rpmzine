@@ -22,6 +22,41 @@ except ImportError:
     )
     _PYQT6 = False
 
+# ── BaseAction ─────────────────────────────────────────────────────────────────
+# Define a guaranteed fallback first so the name is always bound in this module.
+# Picard 3.0 uses QtGui.QAction; Picard 2.x used QtWidgets.QAction.
+_QActionBase = QtGui.QAction if _PYQT6 else QtWidgets.QAction
+
+
+class BaseAction(_QActionBase):
+    """Compatibility base class for plugin context-menu actions."""
+    NAME = "Unknown"
+    TITLE = None   # Picard 3.0 style; falls back to NAME when None
+    MENU = []
+
+    def __init__(self, api=None, parent=None):
+        title = self.TITLE if self.TITLE is not None else self.NAME
+        super().__init__(title, parent)
+        self.tagger = QtCore.QCoreApplication.instance()
+        self.triggered.connect(self._run_callback)
+
+    def _run_callback(self):
+        if self.tagger and hasattr(self.tagger, 'window'):
+            self.callback(self.tagger.window.selected_objects)
+
+    def callback(self, objs):
+        raise NotImplementedError
+
+
+# Prefer the real Picard BaseAction if importable; our fallback stays on failure.
+try:
+    from picard.extension_points.item_actions import BaseAction  # noqa: F811
+except Exception:
+    try:
+        from picard.ui.itemviews import BaseAction  # noqa: F811
+    except Exception:
+        pass  # Our definition above is used
+
 # ── File event processors ──────────────────────────────────────────────────────
 try:
     from picard.extension_points.event_hooks import (
@@ -29,15 +64,15 @@ try:
         register_file_post_save_processor,
         register_file_pre_save_processor,
     )
-except ImportError:
+except Exception:
     # Picard 2.x
     try:
         from picard.file import register_file_post_load_processor
-    except ImportError:
+    except Exception:
         register_file_post_load_processor = None
     try:
         from picard.file import register_file_post_save_processor
-    except ImportError:
+    except Exception:
         register_file_post_save_processor = None
     register_file_pre_save_processor = None
 
@@ -47,7 +82,7 @@ try:
         register_album_metadata_processor,
         register_track_metadata_processor,
     )
-except ImportError:
+except Exception:
     from picard.metadata import (
         register_album_metadata_processor,
         register_track_metadata_processor,
@@ -61,7 +96,7 @@ try:
         register_file_action,
         register_track_action,
     )
-except ImportError:
+except Exception:
     from picard.ui.itemviews import (
         register_album_action,
         register_cluster_action,
@@ -69,35 +104,8 @@ except ImportError:
         register_track_action,
     )
 
-# ── BaseAction ─────────────────────────────────────────────────────────────────
-# Use broad except: mypyc-compiled builds can raise non-ImportError on circular
-# imports between picard.extension_points.item_actions and picard.plugin.
-try:
-    from picard.extension_points.item_actions import BaseAction
-except Exception:
-    try:
-        from picard.ui.itemviews import BaseAction
-    except Exception:
-        _QActionBase = QtGui.QAction if _PYQT6 else QtWidgets.QAction
-
-        class BaseAction(_QActionBase):
-            NAME = "Unknown"
-            MENU = []
-
-            def __init__(self, api=None, parent=None):
-                super().__init__(getattr(self, 'TITLE', self.NAME), parent)
-                self.tagger = QtCore.QCoreApplication.instance()
-                self.triggered.connect(self._run_callback)
-
-            def _run_callback(self):
-                if self.tagger and hasattr(self.tagger, 'window'):
-                    self.callback(self.tagger.window.selected_objects)
-
-            def callback(self, objs):
-                raise NotImplementedError
-
 # ── Options pages ──────────────────────────────────────────────────────────────
 try:
     from picard.extension_points.options_pages import register_options_page
-except ImportError:
+except Exception:
     from picard.ui.options import register_options_page
