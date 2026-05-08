@@ -1,0 +1,7 @@
+uuid = "92e5be70-811d-41e9-8ee1-1bb94600733c"
+name = "rpmzine Picard Plugins"
+description = "Collection of MusicBrainz Picard plugins: Album Subfolder, Artwork Searcher, Audio File Info, Cluster Refresh, Grouping Tagger, Multidisc Tagger, Suffix Appender, Tag Filter & Joiner."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"
