@@ -14,7 +14,7 @@ from picard.config import BoolOption, TextOption
 from ._compat import (
     OptionsPage,
     BaseAction,
-    QtCore, QtGui, QtWidgets,
+    Qt, QtCore, QtGui, QtWidgets,
     register_album_action, register_cluster_action,
     register_file_action, register_options_page, register_track_action,
 )
@@ -1953,11 +1953,11 @@ class SuffixOptionsPage(OptionsPage):
         
         # Headers
         header_checkbox = QtWidgets.QLabel("<b>Enable</b>")
-        header_checkbox.setAlignment(QtCore.Qt.AlignCenter)
+        header_checkbox.setAlignment(Qt.AlignCenter)
         header_example = QtWidgets.QLabel("<b>Example Preview</b>")
-        header_example.setAlignment(QtCore.Qt.AlignCenter)
+        header_example.setAlignment(Qt.AlignCenter)
         header_button = QtWidgets.QLabel("<b>Wrapper</b>")
-        header_button.setAlignment(QtCore.Qt.AlignCenter)
+        header_button.setAlignment(Qt.AlignCenter)
         
         grid_layout.addWidget(header_checkbox, 0, 0)
         grid_layout.addWidget(header_example, 0, 1)

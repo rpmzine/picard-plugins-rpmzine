@@ -7,6 +7,7 @@ PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 from picard import log
 from ._compat import (
     BaseAction,
+    Qt,
     QtCore,
     QtWidgets,
     register_album_action,
@@ -51,8 +52,8 @@ class DiscSubtitleDialog(QtWidgets.QDialog):
         # Scroll area for disc inputs
         scroll = QtWidgets.QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         
         scroll_widget = QtWidgets.QWidget()
         scroll_layout = QtWidgets.QVBoxLayout(scroll_widget)

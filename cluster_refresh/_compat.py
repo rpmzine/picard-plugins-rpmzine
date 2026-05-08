@@ -8,6 +8,10 @@
 # All register_* helpers use lazy lookup: they resolve from sys.modules at each
 # *call*, not at import time. This makes them safe whether called at module
 # level or inside enable(api), regardless of Picard's initialisation order.
+#
+# PyQt6 moved from flat to scoped enums (QMessageBox.Yes →
+# QMessageBox.StandardButton.Yes etc.). We expose compat subclasses that add
+# the flat names back so plugin code works unchanged in both Qt versions.
 
 import sys as _sys
 
@@ -35,24 +39,94 @@ if QtCore is None:
         from PyQt5 import QtCore, QtGui, QtWidgets
         _PYQT6 = False
 
-Qt = QtCore.Qt
+# ── PyQt6 scoped-enum compatibility ────────────────────────────────────────────
+# PyQt6 replaced flat enums with scoped ones. We create thin subclasses that
+# re-expose the PyQt5 names, then patch them back onto the QtWidgets module so
+# that `QtWidgets.QMessageBox.Yes` etc. continue to work.
 
-QCheckBox = QtWidgets.QCheckBox
-QComboBox = QtWidgets.QComboBox
-QDialog = QtWidgets.QDialog
-QDialogButtonBox = QtWidgets.QDialogButtonBox
-QFrame = QtWidgets.QFrame
-QGridLayout = QtWidgets.QGridLayout
-QGroupBox = QtWidgets.QGroupBox
-QHBoxLayout = QtWidgets.QHBoxLayout
-QLabel = QtWidgets.QLabel
-QLineEdit = QtWidgets.QLineEdit
-QMessageBox = QtWidgets.QMessageBox
-QPushButton = QtWidgets.QPushButton
-QScrollArea = QtWidgets.QScrollArea
-QSizePolicy = QtWidgets.QSizePolicy
-QVBoxLayout = QtWidgets.QVBoxLayout
-QWidget = QtWidgets.QWidget
+if _PYQT6:
+    class QMessageBox(QtWidgets.QMessageBox):
+        Yes         = QtWidgets.QMessageBox.StandardButton.Yes
+        No          = QtWidgets.QMessageBox.StandardButton.No
+        Ok          = QtWidgets.QMessageBox.StandardButton.Ok
+        Cancel      = QtWidgets.QMessageBox.StandardButton.Cancel
+        Question    = QtWidgets.QMessageBox.Icon.Question
+        Information = QtWidgets.QMessageBox.Icon.Information
+        Warning     = QtWidgets.QMessageBox.Icon.Warning
+        Critical    = QtWidgets.QMessageBox.Icon.Critical
+
+    class QDialogButtonBox(QtWidgets.QDialogButtonBox):
+        Ok     = QtWidgets.QDialogButtonBox.StandardButton.Ok
+        Cancel = QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        Yes    = QtWidgets.QDialogButtonBox.StandardButton.Yes
+        No     = QtWidgets.QDialogButtonBox.StandardButton.No
+
+    class QDialog(QtWidgets.QDialog):
+        Accepted = QtWidgets.QDialog.DialogCode.Accepted
+        Rejected = QtWidgets.QDialog.DialogCode.Rejected
+
+    class QSizePolicy(QtWidgets.QSizePolicy):
+        Expanding = QtWidgets.QSizePolicy.Policy.Expanding
+        Fixed     = QtWidgets.QSizePolicy.Policy.Fixed
+        Minimum   = QtWidgets.QSizePolicy.Policy.Minimum
+        Maximum   = QtWidgets.QSizePolicy.Policy.Maximum
+        Preferred = QtWidgets.QSizePolicy.Policy.Preferred
+
+    class QFrame(QtWidgets.QFrame):
+        NoFrame     = QtWidgets.QFrame.Shape.NoFrame
+        StyledPanel = QtWidgets.QFrame.Shape.StyledPanel
+        Panel       = QtWidgets.QFrame.Shape.Panel
+        Sunken      = QtWidgets.QFrame.Shadow.Sunken
+        Raised      = QtWidgets.QFrame.Shadow.Raised
+        Plain       = QtWidgets.QFrame.Shadow.Plain
+
+    # Patch back onto QtWidgets so code using QtWidgets.QMessageBox.Yes etc. works
+    QtWidgets.QMessageBox     = QMessageBox
+    QtWidgets.QDialogButtonBox = QDialogButtonBox
+    QtWidgets.QDialog         = QDialog
+    QtWidgets.QSizePolicy     = QSizePolicy
+    QtWidgets.QFrame          = QFrame
+
+    # Qt namespace proxy: exposes PyQt5-style flat names for the common enums
+    class _QtNS:
+        AlignCenter  = QtCore.Qt.AlignmentFlag.AlignCenter
+        AlignLeft    = QtCore.Qt.AlignmentFlag.AlignLeft
+        AlignRight   = QtCore.Qt.AlignmentFlag.AlignRight
+        AlignTop     = QtCore.Qt.AlignmentFlag.AlignTop
+        AlignBottom  = QtCore.Qt.AlignmentFlag.AlignBottom
+        AlignVCenter = QtCore.Qt.AlignmentFlag.AlignVCenter
+        AlignHCenter = QtCore.Qt.AlignmentFlag.AlignHCenter
+        Checked          = QtCore.Qt.CheckState.Checked
+        Unchecked        = QtCore.Qt.CheckState.Unchecked
+        PartiallyChecked = QtCore.Qt.CheckState.PartiallyChecked
+        ScrollBarAsNeeded  = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        ScrollBarAlwaysOff = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        ScrollBarAlwaysOn  = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+
+        def __getattr__(self, name):
+            return getattr(QtCore.Qt, name)
+
+    Qt = _QtNS()
+else:
+    QMessageBox     = QtWidgets.QMessageBox
+    QDialogButtonBox = QtWidgets.QDialogButtonBox
+    QDialog         = QtWidgets.QDialog
+    QSizePolicy     = QtWidgets.QSizePolicy
+    QFrame          = QtWidgets.QFrame
+    Qt              = QtCore.Qt
+
+# ── Remaining widget aliases ───────────────────────────────────────────────────
+QCheckBox    = QtWidgets.QCheckBox
+QComboBox    = QtWidgets.QComboBox
+QGridLayout  = QtWidgets.QGridLayout
+QGroupBox    = QtWidgets.QGroupBox
+QHBoxLayout  = QtWidgets.QHBoxLayout
+QLabel       = QtWidgets.QLabel
+QLineEdit    = QtWidgets.QLineEdit
+QPushButton  = QtWidgets.QPushButton
+QScrollArea  = QtWidgets.QScrollArea
+QVBoxLayout  = QtWidgets.QVBoxLayout
+QWidget      = QtWidgets.QWidget
 
 # ── BaseAction ─────────────────────────────────────────────────────────────────
 _QActionBase = QtGui.QAction if _PYQT6 else QtWidgets.QAction
@@ -86,8 +160,6 @@ for _mod_name in ('picard.plugin3.api', 'picard.extension_points.item_actions',
         break
 
 # ── OptionsPage ────────────────────────────────────────────────────────────────
-# Resolved lazily at access time; falls back to a no-op stub so class definitions
-# that inherit from it don't fail when running outside Picard.
 def _resolve_options_page():
     for _mod_name in ('picard.ui.options', 'picard.extension_points.options_pages'):
         _mod = _sys.modules.get(_mod_name)
