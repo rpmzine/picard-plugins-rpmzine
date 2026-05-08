@@ -19,10 +19,11 @@ import shutil
 import threading
 
 from picard import log
-from picard.file import (
-    register_file_post_load_processor,
-    register_file_post_save_processor,
-)
+try:
+    from picard.file import register_file_post_load_processor
+except ImportError:
+    register_file_post_load_processor = None
+from picard.file import register_file_post_save_processor
 
 _ILLEGAL_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 
@@ -173,5 +174,6 @@ def _album_subfolder(file):
         )
 
 
-register_file_post_load_processor(_on_file_loaded)
+if register_file_post_load_processor is not None:
+    register_file_post_load_processor(_on_file_loaded)
 register_file_post_save_processor(_album_subfolder)
