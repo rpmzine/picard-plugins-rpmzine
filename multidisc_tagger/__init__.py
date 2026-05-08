@@ -5,8 +5,8 @@ PLUGIN_VERSION = "2.6.0"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 
 from picard import log
-from picard.ui.itemviews import BaseAction
 from .._compat import (
+    BaseAction,
     QtCore,
     QtWidgets,
     register_album_action,

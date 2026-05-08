@@ -1,7 +1,6 @@
 # Picard 2.x / 3.0 import compatibility shim.
-# In Picard 3.0 all register_* functions moved to picard.extension_points.*.
-# BaseAction and OptionsPage stayed in their original locations.
-# PyQt5 → PyQt6.
+# In Picard 3.0 all register_* functions AND BaseAction moved to
+# picard.extension_points.*. PyQt5 → PyQt6.
 
 # ── PyQt ───────────────────────────────────────────────────────────────────────
 try:
@@ -54,9 +53,10 @@ except ImportError:
         register_track_metadata_processor,
     )
 
-# ── Item actions ───────────────────────────────────────────────────────────────
+# ── Item actions & BaseAction ──────────────────────────────────────────────────
 try:
     from picard.extension_points.item_actions import (
+        BaseAction,
         register_album_action,
         register_cluster_action,
         register_file_action,
@@ -64,6 +64,7 @@ try:
     )
 except ImportError:
     from picard.ui.itemviews import (
+        BaseAction,
         register_album_action,
         register_cluster_action,
         register_file_action,

@@ -11,9 +11,9 @@ import re
 import json
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from picard.ui.itemviews import BaseAction
 from picard.ui.options import OptionsPage
 from .._compat import (
+    BaseAction,
     QtCore, QtGui, QtWidgets,
     register_album_action, register_cluster_action,
     register_file_action, register_options_page, register_track_action,

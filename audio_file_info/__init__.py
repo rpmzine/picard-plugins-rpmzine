@@ -10,9 +10,9 @@ import shutil
 import subprocess
 from picard import log
 from mutagen import File as MutagenFile
-from picard.ui.itemviews import BaseAction
 from .._compat import (
     QtWidgets,
+    BaseAction,
     register_album_action,
     register_album_metadata_processor,
     register_cluster_action,
