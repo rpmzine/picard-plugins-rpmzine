@@ -53,10 +53,9 @@ except ImportError:
         register_track_metadata_processor,
     )
 
-# ── Item actions & BaseAction ──────────────────────────────────────────────────
+# ── Item actions: register_* functions ────────────────────────────────────────
 try:
     from picard.extension_points.item_actions import (
-        BaseAction,
         register_album_action,
         register_cluster_action,
         register_file_action,
@@ -64,12 +63,38 @@ try:
     )
 except ImportError:
     from picard.ui.itemviews import (
-        BaseAction,
         register_album_action,
         register_cluster_action,
         register_file_action,
         register_track_action,
     )
+
+# ── BaseAction ─────────────────────────────────────────────────────────────────
+# Use broad except: mypyc-compiled builds can raise non-ImportError on circular
+# imports between picard.extension_points.item_actions and picard.plugin.
+try:
+    from picard.extension_points.item_actions import BaseAction
+except Exception:
+    try:
+        from picard.ui.itemviews import BaseAction
+    except Exception:
+        _QActionBase = QtGui.QAction if _PYQT6 else QtWidgets.QAction
+
+        class BaseAction(_QActionBase):
+            NAME = "Unknown"
+            MENU = []
+
+            def __init__(self, api=None, parent=None):
+                super().__init__(getattr(self, 'TITLE', self.NAME), parent)
+                self.tagger = QtCore.QCoreApplication.instance()
+                self.triggered.connect(self._run_callback)
+
+            def _run_callback(self):
+                if self.tagger and hasattr(self.tagger, 'window'):
+                    self.callback(self.tagger.window.selected_objects)
+
+            def callback(self, objs):
+                raise NotImplementedError
 
 # ── Options pages ──────────────────────────────────────────────────────────────
 try:
