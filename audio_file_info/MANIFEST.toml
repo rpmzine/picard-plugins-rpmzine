@@ -1,0 +1,7 @@
+uuid = "365e1999-1db7-4abc-b572-f325c7b15ffb"
+name = "Audio File Info"
+description = "Adds bits-per-sample, sample rate, channels and codec (if available) to metadata and offers to append [BPS-SR] to album titles."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"

@@ -1,0 +1,7 @@
+uuid = "49b1d74a-c011-4b4a-914e-8c14a26c3d54"
+name = "Artwork Searcher"
+description = "Opens a browser image search for album artwork using artist and album title (or folder name)."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "GPL-2.0-or-later"
+license_url = "https://www.gnu.org/licenses/gpl-2.0.html"

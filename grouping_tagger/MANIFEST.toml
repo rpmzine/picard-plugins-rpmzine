@@ -1,0 +1,7 @@
+uuid = "54096269-4321-4772-8b12-ec6d25e1e376"
+name = "Grouping Tagger"
+description = "Tag GROUPING field with customizable source and format tags via context menu. Uses JSON templates with detection variables (Vinyl/CD/Digital source, format, quality tier, channels, bootleg, remaster). Includes configurable fixed tags and auto-detection matrix."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"

@@ -1,0 +1,7 @@
+uuid = "b398e4bf-24f5-4ab5-a149-0ceacfb3cd32"
+name = "Album Subfolder"
+description = "After saving, moves files into a subfolder named 'Albumartist - Album' inside the destination folder. Also moves artwork, cue sheets, and subfolders (e.g. ARTWORK/) from the source folder into the subfolder. Requires 'Move additional files' to be DISABLED in Picard options."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "GPL-2.0-or-later"
+license_url = "https://www.gnu.org/licenses/gpl-2.0.html"

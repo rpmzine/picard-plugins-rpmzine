@@ -1,0 +1,7 @@
+uuid = "3ac9035d-541b-4c6f-923f-4704b4c478b3"
+name = "Cluster Refresh"
+description = "Refreshes cluster files from disk without re-dragging. Right-click a cluster or file and choose 'Refresh from Disk' to re-read updated metadata."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"

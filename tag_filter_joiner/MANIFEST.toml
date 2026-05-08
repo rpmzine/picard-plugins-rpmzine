@@ -1,0 +1,7 @@
+uuid = "86bdc092-6097-4ead-8d37-3e9128b6a7c1"
+name = "Tag Filter & Joiner"
+description = "Ignore selected tags and/or join multi-value tags with custom separators."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"

@@ -1,0 +1,7 @@
+uuid = "35162d2f-3604-46cc-958a-376c21ecf82e"
+name = "Multidisc Tagger"
+description = "When multidisc releases are detected, this plugin tags them appropriately, using Work and Movement similar to Classical Music tagging. Also allows manual multidisc creation via context menu."
+api = ["3.0"]
+authors = ["rpmzine"]
+license = "MIT"
+license_url = "https://opensource.org/licenses/MIT"

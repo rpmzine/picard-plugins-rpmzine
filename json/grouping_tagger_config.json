@@ -1,0 +1,43 @@
+{
+  "templates": [
+    {
+      "divider": " | ",
+      "name": "Source + Format",
+      "template": "{SOURCE} | {FORMAT}"
+    },
+    {
+      "divider": " - ",
+      "name": "Source + Quality",
+      "template": "{SOURCE} - {QUALITY}"
+    },
+    {
+      "divider": ", ",
+      "name": "Full Info",
+      "template": "{SOURCE}, {FORMAT}, {QUALITY}"
+    },
+    {
+      "divider": ", ",
+      "name": "Simple Source",
+      "template": "{SOURCE}"
+    },
+    {
+      "divider": ", ",
+      "name": "Digital Bootleg",
+      "template": "{SOURCE} Bootleg"
+    }
+  ],
+  "fixed_tags": {
+    "Blu-Ray Audio": "BD Audio",
+    "BluSpec CD2": "BSCD2",
+    "Classical": "Classical",
+    "DSD": "DSF",
+    "DVD Audio": "DVD-A",
+    "Deluxe Edition": "Deluxe",
+    "Japanese Import": "JP",
+    "Limited Edition": "Limited",
+    "Promo": "Promo",
+    "SACD": "SACD",
+    "SHM-CD": "SHM-CD",
+    "Vinyl Bootleg": "Vinyl Bootleg"
+  }
+}

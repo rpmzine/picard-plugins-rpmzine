@@ -1,0 +1,27 @@
+[
+  {
+    "divider": " | ",
+    "name": "Source + Format",
+    "template": "{SOURCE} | {FORMAT}"
+  },
+  {
+    "divider": " - ",
+    "name": "Source + Quality",
+    "template": "{SOURCE} - {QUALITY}"
+  },
+  {
+    "divider": ", ",
+    "name": "Full Info",
+    "template": "{SOURCE}, {FORMAT}, {QUALITY}"
+  },
+  {
+    "divider": ", ",
+    "name": "Simple Source",
+    "template": "{SOURCE}"
+  },
+  {
+    "divider": ", ",
+    "name": "Digital Bootleg",
+    "template": "{SOURCE} Bootleg"
+  }
+]

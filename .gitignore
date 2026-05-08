@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
+
+# Backup / scratch files
+*.backup
+*.v[0-9]*.*
+
+# IDE / tooling
+.claude/
+
+# Old development scripts (not part of the public plugin set)
+old_tools/

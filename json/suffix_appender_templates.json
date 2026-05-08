@@ -1,0 +1,102 @@
+[
+  {
+    "formula": " [<releasecountry>]",
+    "name": "Country"
+  },
+  {
+    "formula": " [<releasecountry> <format>]",
+    "name": "Country Media (No Vinyl)"
+  },
+  {
+    "formula": " [<releasecountry> <formatsize>]",
+    "name": "Country Vinyl-Format"
+  },
+  {
+    "formula": " [Deluxe]",
+    "name": "Deluxe tag"
+  },
+  {
+    "formula": " [Digital] [<bits_per_sample>-<sample_rate|khz>]",
+    "name": "Digital | Resolution"
+  },
+  {
+    "formula": " [<file_format>] [<bits_per_sample>-<sample_rate|khz>]",
+    "name": "File Format | Resolution"
+  },
+  {
+    "formula": " [<bits_per_sample>-<sample_rate|khz>]",
+    "name": "Hi Res Addition"
+  },
+  {
+    "formula": " [Ltd Ed]",
+    "name": "Limited"
+  },
+  {
+    "formula": " [<format>]",
+    "name": "Media"
+  },
+  {
+    "formula": "  [Mono]",
+    "name": "Mono"
+  },
+  {
+    "formula": " [<bits_per_sample>-<sample_rate|khz> <channels>ch] <file_format>",
+    "name": "Multichannel + Format"
+  },
+  {
+    "formula": " [<year[:4]>]",
+    "name": "Release Year"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry>]",
+    "name": "Release Year Country"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <catalognumber>]",
+    "name": "Release Year Country Cat"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <catalognumber> <formatsize>]",
+    "name": "Release Year Country Cat Vinyl"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <format>]",
+    "name": "Release Year Country Media"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> SACD]",
+    "name": "Release Year Country SACD"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <formatsize>]",
+    "name": "Release Year Country Vinyl"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <formatsize>] [<bits_per_sample>-<sample_rate|khz>]",
+    "name": "Release Year Country Vinyl | Resolution"
+  },
+  {
+    "formula": " [<year[:4]> <label> <formatsize>]",
+    "name": "Release Year Label Vinyl"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <catalognumber> SHM-CD]",
+    "name": "SHM-CD"
+  },
+  {
+    "formula": " [Super Deluxe]",
+    "name": "Super Deluxe tag"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> BSCD2]",
+    "name": "Year Country BSCD2"
+  },
+  {
+    "formula": " [<year[:4]> <releasecountry> <catalognumber> BSCD2]",
+    "name": "Year Country Cat BSCD2"
+  },
+  {
+    "formula": "  [<year[:4]>] [Digital]",
+    "name": "Year Digital"
+  }
+]
