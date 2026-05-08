@@ -11,7 +11,7 @@ import os
 import webbrowser
 from urllib.parse import quote_plus
 from picard import log
-from .._compat import (
+from ._compat import (
     BaseAction,
     register_album_action,
     register_cluster_action,
@@ -105,31 +105,12 @@ class SearchArtworkBing(BaseAction):
 
 _google_action = SearchArtworkGoogle()
 _bing_action = SearchArtworkBing()
-_registered = False
 
 
-def _register_actions():
-    global _registered
-    if _registered:
-        return
+def enable(api):
     for _action in (_google_action, _bing_action):
         register_file_action(_action)
         register_track_action(_action)
         register_cluster_action(_action)
         register_album_action(_action)
-    _registered = True
     log.debug("Artwork Searcher: actions registered")
-
-
-try:
-    _register_actions()
-except Exception:
-    log.debug("Artwork Searcher: import-time registration deferred to plugin_loaded")
-
-
-def plugin_loaded():
-    _register_actions()
-
-
-def plugin_unloaded():
-    pass

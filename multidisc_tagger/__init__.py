@@ -5,7 +5,7 @@ PLUGIN_VERSION = "2.6.0"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 
 from picard import log
-from .._compat import (
+from ._compat import (
     BaseAction,
     QtCore,
     QtWidgets,
@@ -418,16 +418,12 @@ def set_multidisc_tags_track(tagger, metadata, track, release):
     if title:
         metadata["movement"] = title
 
-# Register processors and actions
-register_album_metadata_processor(set_multidisc_tags_album)
-register_track_metadata_processor(set_multidisc_tags_track)
-log.info("Multidisc Tagger: Plugin loaded, metadata processors registered")
+_multidisc_action = MakeMultidiscAction()
 
-# Register the context menu action
-try:
-    _multidisc_action = MakeMultidiscAction()
-    register_album_action(_multidisc_action)      # Post-processing (albums)
-    register_cluster_action(_multidisc_action)    # Pre-processing (clusters)
-    log.info("Multidisc Tagger: Context menu action registered for albums and clusters")
-except Exception as e:
-    log.error(f"Multidisc Tagger: Failed to register context menu action: {e}")
+
+def enable(api):
+    register_album_metadata_processor(set_multidisc_tags_album)
+    register_track_metadata_processor(set_multidisc_tags_track)
+    register_album_action(_multidisc_action)
+    register_cluster_action(_multidisc_action)
+    log.info("Multidisc Tagger: Plugin loaded")

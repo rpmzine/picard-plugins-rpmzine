@@ -8,7 +8,7 @@ PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
 from picard import log
-from .._compat import BaseAction, register_cluster_action, register_file_action
+from ._compat import BaseAction, register_cluster_action, register_file_action
 
 
 class RefreshFromDiskAction(BaseAction):
@@ -31,10 +31,10 @@ class RefreshFromDiskAction(BaseAction):
             log.error(f"Cluster Refresh: Error refreshing files: {e}")
 
 
-try:
-    _refresh_action = RefreshFromDiskAction()
+_refresh_action = RefreshFromDiskAction()
+
+
+def enable(api):
     register_cluster_action(_refresh_action)
     register_file_action(_refresh_action)
     log.info("Cluster Refresh: Plugin loaded, actions registered")
-except Exception as e:
-    log.error(f"Cluster Refresh: Failed to register actions: {e}")

@@ -8,8 +8,8 @@ PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from picard.ui.options import OptionsPage
-from .._compat import (
+from ._compat import (
+    OptionsPage,
     QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QScrollArea, QVBoxLayout, QWidget, Qt,
     register_options_page,
@@ -227,18 +227,7 @@ def process_track_metadata(album, metadata, track, release):
     except Exception as e:
         log.error(f"Tag Filter & Joiner: Error processing metadata - {e}")
 
-# Register components at import time (since plugin_loaded doesn't work in this installation)
-try:
-    log.info("Tag Filter & Joiner: Registering components at import time")
+def enable(api):
     register_options_page(TagFilterOptionsPage)
     register_track_metadata_processor(process_track_metadata)
-    log.info("Tag Filter & Joiner: Registration complete")
-except Exception as e:
-    log.error(f"Tag Filter & Joiner: Registration failed - {e}")
-
-def plugin_loaded(picard):
-    """This function is never called in your installation, but keeping it for completeness"""
-    log.info("Tag Filter & Joiner: plugin_loaded called (unexpected)")
-
-def plugin_unloaded(picard):
-    log.info("Tag Filter & Joiner: plugin_unloaded called")
+    log.info("Tag Filter & Joiner: Plugin loaded")

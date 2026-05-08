@@ -19,8 +19,9 @@ import shutil
 import threading
 
 from picard import log
-from .._compat import (
+from ._compat import (
     QMessageBox,
+    _has_register,
     register_file_post_save_processor,
     register_file_pre_save_processor,
     register_file_post_load_processor,
@@ -210,9 +211,10 @@ def _album_subfolder(file):
 
 # ── Registration ───────────────────────────────────────────────────────────────
 
-if register_file_pre_save_processor is not None:
-    register_file_pre_save_processor(_on_file_loaded)
-elif register_file_post_load_processor is not None:
-    register_file_post_load_processor(_on_file_loaded)
-
-register_file_post_save_processor(_album_subfolder)
+def enable(api):
+    if _has_register('register_file_pre_save_processor',
+                     'picard.extension_points.event_hooks', 'picard.file'):
+        register_file_pre_save_processor(_on_file_loaded)
+    else:
+        register_file_post_load_processor(_on_file_loaded)
+    register_file_post_save_processor(_album_subfolder)

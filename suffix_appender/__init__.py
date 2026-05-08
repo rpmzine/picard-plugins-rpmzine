@@ -11,8 +11,8 @@ import re
 import json
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from picard.ui.options import OptionsPage
-from .._compat import (
+from ._compat import (
+    OptionsPage,
     BaseAction,
     QtCore, QtGui, QtWidgets,
     register_album_action, register_cluster_action,
@@ -3356,22 +3356,13 @@ class SuffixAction(BaseAction):
         except Exception:
             return False
 
-# NOTE: "Active Preset" action removed in v2.2.0 - users select templates directly from the list
-# The SuffixAction class is kept for backward compatibility but not registered
-
-# Register template actions (new flexible system)
-try:
-    # Load templates from JSON file, Picard settings, or defaults
+def enable(api):
+    # Template actions from JSON / Picard settings / defaults
     templates = load_templates_from_sources()
-
-    # Sort templates alphabetically by name for consistent menu order
     templates = sorted(templates, key=lambda t: t.get("name", "").lower())
-
-    # Register each template as a context menu action
     for template in templates:
         template_name = template.get("name", "Unnamed")
         template_formula = template.get("formula", "")
-
         if template_formula:
             ActionClass = create_preset_action(template_name, template_formula)
             action = ActionClass()
@@ -3379,15 +3370,7 @@ try:
             register_track_action(action)
             register_file_action(action)
             register_cluster_action(action)
-
     log.info(f"Suffix Appender: Registered {len(templates)} template actions")
-except Exception as e:
-    log.error(f"Suffix Appender: Failed to register template actions: {e}")
 
-# Legacy preset registration removed - all templates now managed through DEFAULT_TEMPLATES and JSON file
-
-# Register the options page
-try:
     register_options_page(SuffixOptionsPage)
-except Exception as e:
-    log.error(f"Suffix Appender: Options page registration failed: {e}")
+    log.info("Suffix Appender: Plugin loaded")

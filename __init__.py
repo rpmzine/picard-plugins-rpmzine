@@ -9,6 +9,7 @@ from . import tag_filter_joiner
 
 
 def enable(api):
-    # Sub-packages register themselves at import time via _compat.py helpers.
-    # This function satisfies the Picard 3.0 plugin V3 entry-point requirement.
-    pass
+    for _plugin in (album_subfolder, artwork_searcher, audio_file_info,
+                    cluster_refresh, grouping_tagger, multidisc_tagger,
+                    suffix_appender, tag_filter_joiner):
+        _plugin.enable(api)
