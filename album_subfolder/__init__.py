@@ -18,16 +18,14 @@ import re
 import shutil
 import threading
 
-from picard import config, log
-from picard.config import BoolOption
+from picard import log
 from picard.file import register_file_post_save_processor
 from picard.metadata import register_track_metadata_processor
-from picard.ui.options import OptionsPage, register_options_page
 
 try:
-    from PyQt6.QtWidgets import QCheckBox, QLabel, QVBoxLayout
+    from PyQt6.QtWidgets import QMessageBox
 except ImportError:
-    from PyQt5.QtWidgets import QCheckBox, QLabel, QVBoxLayout
+    from PyQt5.QtWidgets import QMessageBox
 
 _ILLEGAL_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 
@@ -40,51 +38,35 @@ _ADDITIONAL_EXTS = {
 }
 
 _lock = threading.Lock()
-_source_map = {}   # id(file) -> source_dir, captured before save
-_album_state = {}  # key -> state dict (per album)
-
-options = [
-    BoolOption("setting", "album_subfolder_enabled", True),
-]
-
-
-# ── Options Page ───────────────────────────────────────────────────────────────
-
-class AlbumSubfolderOptionsPage(OptionsPage):
-    NAME = "album_subfolder"
-    TITLE = "Album Subfolder"
-    PARENT = "plugins"
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-
-        self.enabled_cb = QCheckBox(
-            "Move files into 'Albumartist - Album' subfolder after saving"
-        )
-        layout.addWidget(self.enabled_cb)
-
-        note = QLabel(
-            "When enabled, saved files are automatically moved into a subfolder\n"
-            "named 'Albumartist - Album' inside the destination folder.\n"
-            "Companion files (artwork, cue sheets, logs, subdirs) are moved too.\n\n"
-            "Requires 'Move additional files' to be DISABLED in Picard options."
-        )
-        note.setWordWrap(True)
-        layout.addWidget(note)
-        layout.addStretch()
-
-    def load(self):
-        self.enabled_cb.setChecked(config.setting["album_subfolder_enabled"])
-
-    def save(self):
-        config.setting["album_subfolder_enabled"] = self.enabled_cb.isChecked()
+_source_map = {}    # id(file) -> source_dir, captured before save
+_album_state = {}   # key -> state dict (per album)
+_batch_decision = None  # True = move, False = skip, None = not yet asked
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _sanitize(text):
     return _ILLEGAL_CHARS.sub('_', text).strip('. ')
+
+
+def _ask_move():
+    """Ask the user once per batch whether to move files into subfolders."""
+    try:
+        from PyQt6.QtWidgets import QMessageBox as _MB
+        Yes = _MB.StandardButton.Yes
+        No  = _MB.StandardButton.No
+    except ImportError:
+        from PyQt5.QtWidgets import QMessageBox as _MB
+        Yes = _MB.Yes
+        No  = _MB.No
+    reply = _MB.question(
+        None,
+        "Album Subfolder",
+        "Move saved files into 'Albumartist – Album' subfolders?",
+        Yes | No,
+        Yes,
+    )
+    return reply == Yes
 
 
 def _snapshot_extras(source_dir):
@@ -95,8 +77,7 @@ def _snapshot_extras(source_dir):
             if os.path.isdir(path):
                 extra_dirs.append(name)
             elif (os.path.isfile(path)
-                  and os.path.splitext(name)[1].lower()
-                  in _ADDITIONAL_EXTS):
+                  and os.path.splitext(name)[1].lower() in _ADDITIONAL_EXTS):
                 extra_files.append(name)
     except Exception as e:
         log.error("Album Subfolder: snapshot of %r failed — %s", source_dir, e)
@@ -122,7 +103,15 @@ def _sweep(source_dir, target_dir, extra_files, extra_dirs):
                 log.error("Album Subfolder: could not move %r — %s", src, e)
 
 
-# ── Processors ────────────────────────────────────────────────────────────────
+def _reset_batch_if_done():
+    """Reset batch decision once _source_map and _album_state are both empty."""
+    global _batch_decision
+    with _lock:
+        if not _source_map and not _album_state:
+            _batch_decision = None
+
+
+# ── Source-dir capture ─────────────────────────────────────────────────────────
 
 def _on_file_loaded(file):
     """Picard 2.x: capture source dir at file-load time."""
@@ -133,11 +122,10 @@ def _on_file_loaded(file):
         log.error("Album Subfolder: failed to capture source dir — %s", e)
 
 
-def _capture_source_from_track(tagger, metadata, track, release):
+def _capture_source_from_track(_tagger, _metadata, track, _release):
     """Picard 3.0 fallback: capture source dirs via track metadata processor.
 
     Runs before the user saves, so file.filename is still the source location.
-    Only stores the id if not already present (avoids overwriting on re-process).
     """
     for f in getattr(track, 'linked_files', []):
         try:
@@ -148,20 +136,38 @@ def _capture_source_from_track(tagger, metadata, track, release):
             log.error("Album Subfolder: failed to capture source dir — %s", e)
 
 
+# ── Post-save processor ────────────────────────────────────────────────────────
+
 def _album_subfolder(file):
-    if not config.setting.get("album_subfolder_enabled", True):
+    global _batch_decision
+
+    with _lock:
+        pre_source = _source_map.pop(id(file), None)
+        ask = (_batch_decision is None)
+        if ask:
+            # Temporarily mark as False to block concurrent calls from also asking
+            _batch_decision = False
+
+    if ask:
+        decided = _ask_move()
+        with _lock:
+            _batch_decision = decided
+
+    with _lock:
+        move = _batch_decision
+
+    if not move:
+        _reset_batch_if_done()
         return
 
     try:
-        with _lock:
-            pre_source = _source_map.pop(id(file), None)
-
         meta = file.metadata
         artist = (meta.get('albumartist') or meta.get('artist') or '').strip()
         album_tag = (meta.get('album') or '').strip()
 
         if not artist or not album_tag:
             log.debug("Album Subfolder: skipping %r — missing tags", file.filename)
+            _reset_batch_if_done()
             return
 
         folder_name = _sanitize(f"{artist} - {album_tag}")
@@ -169,6 +175,7 @@ def _album_subfolder(file):
         dest_dir = os.path.dirname(dest_path)
 
         if os.path.basename(dest_dir) == folder_name:
+            _reset_batch_if_done()
             return  # already in the correct subfolder
 
         target_dir = os.path.join(dest_dir, folder_name)
@@ -212,11 +219,11 @@ def _album_subfolder(file):
     except Exception as e:
         log.error("Album Subfolder: failed to organise %r — %s", file.filename, e)
 
+    _reset_batch_if_done()
+
 
 # ── Registration ───────────────────────────────────────────────────────────────
 
-# Source-dir capture: post-load processor (Picard 2.x) or track metadata
-# processor (Picard 3.0, which removed register_file_post_load_processor).
 try:
     from picard.file import register_file_post_load_processor
     register_file_post_load_processor(_on_file_loaded)
@@ -224,4 +231,3 @@ except ImportError:
     register_track_metadata_processor(_capture_source_from_track, priority=0)
 
 register_file_post_save_processor(_album_subfolder)
-register_options_page(AlbumSubfolderOptionsPage)
