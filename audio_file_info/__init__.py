@@ -9,20 +9,18 @@ import os
 import shutil
 import subprocess
 from picard import log
-from picard.metadata import register_track_metadata_processor, register_album_metadata_processor
-try:
-    from picard.file import register_file_post_load_processor
-except ImportError:
-    register_file_post_load_processor = None
 from mutagen import File as MutagenFile
-from picard.ui.itemviews import (
-    BaseAction,
+from picard.ui.itemviews import BaseAction
+from .._compat import (
+    QtWidgets,
     register_album_action,
+    register_album_metadata_processor,
     register_cluster_action,
     register_file_action,
+    register_file_post_load_processor,
     register_track_action,
+    register_track_metadata_processor,
 )
-from PyQt5 import QtWidgets
 from contextlib import suppress
 
 

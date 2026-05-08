@@ -5,12 +5,15 @@ PLUGIN_VERSION = "2.6.0"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 
 from picard import log
-from picard.metadata import (
+from picard.ui.itemviews import BaseAction
+from .._compat import (
+    QtCore,
+    QtWidgets,
+    register_album_action,
     register_album_metadata_processor,
+    register_cluster_action,
     register_track_metadata_processor,
 )
-from picard.ui.itemviews import BaseAction, register_album_action, register_cluster_action
-from PyQt5 import QtWidgets, QtCore
 
 # Storage for manual disc subtitles per album
 _manual_disc_subtitles = {}

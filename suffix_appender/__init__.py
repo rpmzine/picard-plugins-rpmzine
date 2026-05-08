@@ -11,9 +11,13 @@ import re
 import json
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from picard.ui.itemviews import BaseAction, register_album_action, register_track_action, register_file_action, register_cluster_action
-from picard.ui.options import OptionsPage, register_options_page
-from PyQt5 import QtWidgets, QtCore, QtGui
+from picard.ui.itemviews import BaseAction
+from picard.ui.options import OptionsPage
+from .._compat import (
+    QtCore, QtGui, QtWidgets,
+    register_album_action, register_cluster_action,
+    register_file_action, register_options_page, register_track_action,
+)
 
 # Configuration options with proper defaults
 BoolOption("setting", "suffix_appender_avoid_duplicates", True)

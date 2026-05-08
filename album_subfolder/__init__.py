@@ -19,13 +19,12 @@ import shutil
 import threading
 
 from picard import log
-from picard.file import register_file_post_save_processor
-from picard.metadata import register_track_metadata_processor
-
-try:
-    from PyQt6.QtWidgets import QMessageBox
-except ImportError:
-    from PyQt5.QtWidgets import QMessageBox
+from .._compat import (
+    QMessageBox,
+    register_file_post_save_processor,
+    register_file_pre_save_processor,
+    register_file_post_load_processor,
+)
 
 _ILLEGAL_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 
@@ -122,19 +121,6 @@ def _on_file_loaded(file):
         log.error("Album Subfolder: failed to capture source dir — %s", e)
 
 
-def _capture_source_from_track(_tagger, _metadata, track, _release):
-    """Picard 3.0 fallback: capture source dirs via track metadata processor.
-
-    Runs before the user saves, so file.filename is still the source location.
-    """
-    for f in getattr(track, 'linked_files', []):
-        try:
-            with _lock:
-                if id(f) not in _source_map:
-                    _source_map[id(f)] = os.path.dirname(f.filename)
-        except Exception as e:
-            log.error("Album Subfolder: failed to capture source dir — %s", e)
-
 
 # ── Post-save processor ────────────────────────────────────────────────────────
 
@@ -224,10 +210,9 @@ def _album_subfolder(file):
 
 # ── Registration ───────────────────────────────────────────────────────────────
 
-try:
-    from picard.file import register_file_post_load_processor
+if register_file_pre_save_processor is not None:
+    register_file_pre_save_processor(_on_file_loaded)
+elif register_file_post_load_processor is not None:
     register_file_post_load_processor(_on_file_loaded)
-except ImportError:
-    register_track_metadata_processor(_capture_source_from_track, priority=0)
 
 register_file_post_save_processor(_album_subfolder)

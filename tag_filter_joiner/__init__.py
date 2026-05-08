@@ -8,13 +8,13 @@ PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from picard.metadata import register_track_metadata_processor
-from picard.ui.options import OptionsPage, register_options_page
-from PyQt5.QtWidgets import (
-    QCheckBox, QLineEdit, QLabel, QVBoxLayout, QWidget, QHBoxLayout, 
-    QScrollArea, QFrame, QGridLayout
+from picard.ui.options import OptionsPage
+from .._compat import (
+    QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QScrollArea, QVBoxLayout, QWidget, Qt,
+    register_options_page,
+    register_track_metadata_processor,
 )
-from PyQt5.QtCore import Qt
 
 # Standard tags to show in the UI - comprehensive MusicBrainz tag list, alphabetically sorted
 STANDARD_TAGS = [

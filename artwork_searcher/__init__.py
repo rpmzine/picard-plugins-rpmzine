@@ -11,8 +11,8 @@ import os
 import webbrowser
 from urllib.parse import quote_plus
 from picard import log
-from picard.ui.itemviews import (
-    BaseAction,
+from picard.ui.itemviews import BaseAction
+from .._compat import (
     register_album_action,
     register_cluster_action,
     register_file_action,

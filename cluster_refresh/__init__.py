@@ -8,7 +8,8 @@ PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
 from picard import log
-from picard.ui.itemviews import BaseAction, register_cluster_action, register_file_action
+from picard.ui.itemviews import BaseAction
+from .._compat import register_cluster_action, register_file_action
 
 
 class RefreshFromDiskAction(BaseAction):
