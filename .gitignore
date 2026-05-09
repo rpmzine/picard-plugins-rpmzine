@@ -14,3 +14,6 @@ __pycache__/
 
 # Old development scripts (not part of the public plugin set)
 old_tools/
+
+# Per-plugin ZIP build artifacts
+dist/
