@@ -8,7 +8,7 @@ PLUGIN_DESCRIPTION = (
     "from the source folder into the subfolder. "
     "Requires 'Move additional files' to be DISABLED in Picard options."
 )
-PLUGIN_VERSION = "2.3.0"
+PLUGIN_VERSION = "2.2.0"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
@@ -19,12 +19,9 @@ import shutil
 import threading
 
 from picard import log
-from ._compat import (
-    QMessageBox,
-    _has_register,
-    register_file_post_save_processor,
-    register_file_pre_save_processor,
+from picard.file import (
     register_file_post_load_processor,
+    register_file_post_save_processor,
 )
 
 _ILLEGAL_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
@@ -38,35 +35,14 @@ _ADDITIONAL_EXTS = {
 }
 
 _lock = threading.Lock()
-_source_map = {}    # id(file) -> source_dir, captured before save
-_album_state = {}   # key -> state dict (per album)
-_batch_decision = None  # True = move, False = skip, None = not yet asked
+_source_map = {}   # id(file) -> source_dir, captured at load time
+_album_state = {}  # key -> state dict (per album)
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _sanitize(text):
     return _ILLEGAL_CHARS.sub('_', text).strip('. ')
-
-
-def _ask_move():
-    """Ask the user once per batch whether to move files into subfolders."""
-    try:
-        from PyQt6.QtWidgets import QMessageBox as _MB
-        Yes = _MB.StandardButton.Yes
-        No  = _MB.StandardButton.No
-    except ImportError:
-        from PyQt5.QtWidgets import QMessageBox as _MB
-        Yes = _MB.Yes
-        No  = _MB.No
-    reply = _MB.question(
-        None,
-        "Album Subfolder",
-        "Move saved files into 'Albumartist – Album' subfolders?",
-        Yes | No,
-        Yes,
-    )
-    return reply == Yes
 
 
 def _snapshot_extras(source_dir):
@@ -77,10 +53,13 @@ def _snapshot_extras(source_dir):
             if os.path.isdir(path):
                 extra_dirs.append(name)
             elif (os.path.isfile(path)
-                  and os.path.splitext(name)[1].lower() in _ADDITIONAL_EXTS):
+                  and os.path.splitext(name)[1].lower()
+                  in _ADDITIONAL_EXTS):
                 extra_files.append(name)
     except Exception as e:
-        log.error("Album Subfolder: snapshot of %r failed — %s", source_dir, e)
+        log.error(
+            "Album Subfolder: snapshot of %r failed — %s", source_dir, e
+        )
     return extra_files, extra_dirs
 
 
@@ -92,7 +71,9 @@ def _sweep(source_dir, target_dir, extra_files, extra_dirs):
                 shutil.move(src, os.path.join(target_dir, name))
                 log.debug("Album Subfolder: file %r -> subfolder", name)
             except Exception as e:
-                log.error("Album Subfolder: could not move %r — %s", src, e)
+                log.error(
+                    "Album Subfolder: could not move %r — %s", src, e
+                )
     for name in extra_dirs:
         src = os.path.join(source_dir, name)
         if os.path.exists(src):
@@ -100,21 +81,14 @@ def _sweep(source_dir, target_dir, extra_files, extra_dirs):
                 shutil.move(src, os.path.join(target_dir, name))
                 log.debug("Album Subfolder: dir %r -> subfolder", name)
             except Exception as e:
-                log.error("Album Subfolder: could not move %r — %s", src, e)
+                log.error(
+                    "Album Subfolder: could not move %r — %s", src, e
+                )
 
 
-def _reset_batch_if_done():
-    """Reset batch decision once _source_map and _album_state are both empty."""
-    global _batch_decision
-    with _lock:
-        if not _source_map and not _album_state:
-            _batch_decision = None
-
-
-# ── Source-dir capture ─────────────────────────────────────────────────────────
+# ── Processors ────────────────────────────────────────────────────────────────
 
 def _on_file_loaded(file):
-    """Picard 2.x: capture source dir at file-load time."""
     try:
         with _lock:
             _source_map[id(file)] = os.path.dirname(file.filename)
@@ -122,39 +96,22 @@ def _on_file_loaded(file):
         log.error("Album Subfolder: failed to capture source dir — %s", e)
 
 
-
-# ── Post-save processor ────────────────────────────────────────────────────────
-
 def _album_subfolder(file):
-    global _batch_decision
-
-    with _lock:
-        pre_source = _source_map.pop(id(file), None)
-        ask = (_batch_decision is None)
-        if ask:
-            # Temporarily mark as False to block concurrent calls from also asking
-            _batch_decision = False
-
-    if ask:
-        decided = _ask_move()
-        with _lock:
-            _batch_decision = decided
-
-    with _lock:
-        move = _batch_decision
-
-    if not move:
-        _reset_batch_if_done()
-        return
-
     try:
+        # Always pop — keeps _source_map bounded even on tag-only saves.
+        with _lock:
+            pre_source = _source_map.pop(id(file), None)
+
         meta = file.metadata
-        artist = (meta.get('albumartist') or meta.get('artist') or '').strip()
+        artist = (
+            meta.get('albumartist') or meta.get('artist') or ''
+        ).strip()
         album_tag = (meta.get('album') or '').strip()
 
         if not artist or not album_tag:
-            log.debug("Album Subfolder: skipping %r — missing tags", file.filename)
-            _reset_batch_if_done()
+            log.debug(
+                "Album Subfolder: skipping %r — missing tags", file.filename
+            )
             return
 
         folder_name = _sanitize(f"{artist} - {album_tag}")
@@ -162,11 +119,12 @@ def _album_subfolder(file):
         dest_dir = os.path.dirname(dest_path)
 
         if os.path.basename(dest_dir) == folder_name:
-            _reset_batch_if_done()
             return  # already in the correct subfolder
 
         target_dir = os.path.join(dest_dir, folder_name)
-        target_path = os.path.join(target_dir, os.path.basename(dest_path))
+        target_path = os.path.join(
+            target_dir, os.path.basename(dest_path)
+        )
 
         with _lock:
             source_dir = pre_source
@@ -187,7 +145,9 @@ def _album_subfolder(file):
                 }
 
             if source_dir:
-                remaining = sum(1 for s in _source_map.values() if s == source_dir)
+                remaining = sum(
+                    1 for s in _source_map.values() if s == source_dir
+                )
                 is_last = (remaining == 0)
             else:
                 is_last = True
@@ -201,20 +161,17 @@ def _album_subfolder(file):
             with _lock:
                 s = _album_state.pop(key, None)
             if s and s['source_dir']:
-                _sweep(s['source_dir'], target_dir, s['extra_files'], s['extra_dirs'])
+                _sweep(
+                    s['source_dir'], target_dir,
+                    s['extra_files'], s['extra_dirs'],
+                )
 
     except Exception as e:
-        log.error("Album Subfolder: failed to organise %r — %s", file.filename, e)
+        log.error(
+            "Album Subfolder: failed to organise %r — %s",
+            file.filename, e,
+        )
 
-    _reset_batch_if_done()
 
-
-# ── Registration ───────────────────────────────────────────────────────────────
-
-def enable(api):
-    if _has_register('register_file_pre_save_processor',
-                     'picard.extension_points.event_hooks', 'picard.file'):
-        register_file_pre_save_processor(_on_file_loaded)
-    else:
-        register_file_post_load_processor(_on_file_loaded)
-    register_file_post_save_processor(_album_subfolder)
+register_file_post_load_processor(_on_file_loaded)
+register_file_post_save_processor(_album_subfolder)

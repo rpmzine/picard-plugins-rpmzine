@@ -11,13 +11,9 @@ import re
 import json
 from picard import config, log
 from picard.config import BoolOption, TextOption
-from ._compat import (
-    OptionsPage,
-    BaseAction,
-    Qt, QtCore, QtGui, QtWidgets,
-    register_album_action, register_cluster_action,
-    register_file_action, register_options_page, register_track_action,
-)
+from picard.ui.itemviews import BaseAction, register_album_action, register_track_action, register_file_action, register_cluster_action
+from picard.ui.options import OptionsPage, register_options_page
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 # Configuration options with proper defaults
 BoolOption("setting", "suffix_appender_avoid_duplicates", True)
@@ -1953,11 +1949,11 @@ class SuffixOptionsPage(OptionsPage):
         
         # Headers
         header_checkbox = QtWidgets.QLabel("<b>Enable</b>")
-        header_checkbox.setAlignment(Qt.AlignCenter)
+        header_checkbox.setAlignment(QtCore.Qt.AlignCenter)
         header_example = QtWidgets.QLabel("<b>Example Preview</b>")
-        header_example.setAlignment(Qt.AlignCenter)
+        header_example.setAlignment(QtCore.Qt.AlignCenter)
         header_button = QtWidgets.QLabel("<b>Wrapper</b>")
-        header_button.setAlignment(Qt.AlignCenter)
+        header_button.setAlignment(QtCore.Qt.AlignCenter)
         
         grid_layout.addWidget(header_checkbox, 0, 0)
         grid_layout.addWidget(header_example, 0, 1)
@@ -3356,13 +3352,22 @@ class SuffixAction(BaseAction):
         except Exception:
             return False
 
-def enable(api):
-    # Template actions from JSON / Picard settings / defaults
+# NOTE: "Active Preset" action removed in v2.2.0 - users select templates directly from the list
+# The SuffixAction class is kept for backward compatibility but not registered
+
+# Register template actions (new flexible system)
+try:
+    # Load templates from JSON file, Picard settings, or defaults
     templates = load_templates_from_sources()
+
+    # Sort templates alphabetically by name for consistent menu order
     templates = sorted(templates, key=lambda t: t.get("name", "").lower())
+
+    # Register each template as a context menu action
     for template in templates:
         template_name = template.get("name", "Unnamed")
         template_formula = template.get("formula", "")
+
         if template_formula:
             ActionClass = create_preset_action(template_name, template_formula)
             action = ActionClass()
@@ -3370,7 +3375,15 @@ def enable(api):
             register_track_action(action)
             register_file_action(action)
             register_cluster_action(action)
-    log.info(f"Suffix Appender: Registered {len(templates)} template actions")
 
+    log.info(f"Suffix Appender: Registered {len(templates)} template actions")
+except Exception as e:
+    log.error(f"Suffix Appender: Failed to register template actions: {e}")
+
+# Legacy preset registration removed - all templates now managed through DEFAULT_TEMPLATES and JSON file
+
+# Register the options page
+try:
     register_options_page(SuffixOptionsPage)
-    log.info("Suffix Appender: Plugin loaded")
+except Exception as e:
+    log.error(f"Suffix Appender: Options page registration failed: {e}")

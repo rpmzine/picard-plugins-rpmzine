@@ -9,18 +9,17 @@ import os
 import shutil
 import subprocess
 from picard import log
+from picard.metadata import register_track_metadata_processor, register_album_metadata_processor
+from picard.file import register_file_post_load_processor
 from mutagen import File as MutagenFile
-from ._compat import (
-    QtWidgets,
+from picard.ui.itemviews import (
     BaseAction,
     register_album_action,
-    register_album_metadata_processor,
     register_cluster_action,
     register_file_action,
-    register_file_post_load_processor,
     register_track_action,
-    register_track_metadata_processor,
 )
+from PyQt5 import QtWidgets
 from contextlib import suppress
 
 
@@ -635,8 +634,24 @@ class ProcessSelection(BaseAction):
         QtWidgets.QMessageBox.information(None, "Process technical tags", f"Processed {processed} files")
 
 
-_process_selection_action = ProcessSelection()
-
+# Register promo processor/actions at import time and from plugin_loaded
+try:
+    if not _registered:
+        register_track_metadata_processor(_process_track_promo, priority=40)
+        _act = ProcessSelection()
+        register_file_action(_act)
+        register_track_action(_act)
+        register_cluster_action(_act)
+        # ensure automatic processing on file load
+        try:
+            register_file_post_load_processor(add_bits_per_sample)
+        except Exception:
+            # older Picard may not provide this API; ignore
+            pass
+        log.debug("Audio File Info: registered promo processor and ProcessSelection action at import time")
+        _registered = True
+except Exception:
+    log.debug("Audio File Info: promo import-time registration failed; plugin_loaded will try")
 
 def aggregate_technical_tags_to_album(tagger, metadata, release):
     log.debug("Audio File Info: aggregate_technical_tags_to_album called for album '%s'", metadata.get("album"))
@@ -655,13 +670,30 @@ def aggregate_technical_tags_to_album(tagger, metadata, release):
 # Define a BaseAction subclass for the context menu
 # album append action removed; aggregation only
 
-def enable(api):
+# Attempt to register processors at import time as a fallback so they are
+# available even if plugin_loaded timing differs in some environments.
+try:
     register_track_metadata_processor(_add_audio_info, priority=40)
     register_track_metadata_processor(propagate_file_tags_to_track, priority=60)
-    register_track_metadata_processor(_process_track_promo, priority=40)
     register_album_metadata_processor(aggregate_technical_tags_to_album)
-    register_file_action(_process_selection_action)
-    register_track_action(_process_selection_action)
-    register_cluster_action(_process_selection_action)
-    register_file_post_load_processor(add_bits_per_sample)
-    log.info("Audio File Info: Plugin loaded")
+    log.debug("Audio File Info: registered processors at import time")
+except Exception:
+    log.debug("Audio File Info: import-time processor registration failed or deferred")
+
+
+def plugin_loaded(picard):
+    log.info("Audio File Info: plugin_loaded")
+    # Extract technical info from file
+    register_track_metadata_processor(_add_audio_info, priority=40)
+    # Propagate file tags to track metadata
+    register_track_metadata_processor(propagate_file_tags_to_track, priority=60)
+    # Aggregate to album
+    register_album_metadata_processor(aggregate_technical_tags_to_album)
+    # register file post-load processor as fallback
+    try:
+        register_file_post_load_processor(add_bits_per_sample)
+    except Exception:
+        pass
+
+def plugin_unloaded(_picard):
+    pass

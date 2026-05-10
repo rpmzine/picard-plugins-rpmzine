@@ -5,16 +5,12 @@ PLUGIN_VERSION = "2.6.0"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
 
 from picard import log
-from ._compat import (
-    BaseAction,
-    Qt,
-    QtCore,
-    QtWidgets,
-    register_album_action,
+from picard.metadata import (
     register_album_metadata_processor,
-    register_cluster_action,
     register_track_metadata_processor,
 )
+from picard.ui.itemviews import BaseAction, register_album_action, register_cluster_action
+from PyQt5 import QtWidgets, QtCore
 
 # Storage for manual disc subtitles per album
 _manual_disc_subtitles = {}
@@ -52,8 +48,8 @@ class DiscSubtitleDialog(QtWidgets.QDialog):
         # Scroll area for disc inputs
         scroll = QtWidgets.QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         
         scroll_widget = QtWidgets.QWidget()
         scroll_layout = QtWidgets.QVBoxLayout(scroll_widget)
@@ -419,12 +415,16 @@ def set_multidisc_tags_track(tagger, metadata, track, release):
     if title:
         metadata["movement"] = title
 
-_multidisc_action = MakeMultidiscAction()
+# Register processors and actions
+register_album_metadata_processor(set_multidisc_tags_album)
+register_track_metadata_processor(set_multidisc_tags_track)
+log.info("Multidisc Tagger: Plugin loaded, metadata processors registered")
 
-
-def enable(api):
-    register_album_metadata_processor(set_multidisc_tags_album)
-    register_track_metadata_processor(set_multidisc_tags_track)
-    register_album_action(_multidisc_action)
-    register_cluster_action(_multidisc_action)
-    log.info("Multidisc Tagger: Plugin loaded")
+# Register the context menu action
+try:
+    _multidisc_action = MakeMultidiscAction()
+    register_album_action(_multidisc_action)      # Post-processing (albums)
+    register_cluster_action(_multidisc_action)    # Pre-processing (clusters)
+    log.info("Multidisc Tagger: Context menu action registered for albums and clusters")
+except Exception as e:
+    log.error(f"Multidisc Tagger: Failed to register context menu action: {e}")
