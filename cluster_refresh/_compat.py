@@ -39,6 +39,11 @@ if QtCore is None:
         from PyQt5 import QtCore, QtGui, QtWidgets
         _PYQT6 = False
 
+# Behavioral fallback: PyInstaller bundles may not register PyQt6.QtCore in
+# sys.modules under that exact key. Detect by whether Qt uses scoped enums.
+if not _PYQT6 and QtCore is not None:
+    _PYQT6 = hasattr(QtCore.Qt, 'AlignmentFlag')
+
 # ── PyQt6 scoped-enum compatibility ────────────────────────────────────────────
 # PyQt6 replaced flat enums with scoped ones. We create thin subclasses that
 # re-expose the PyQt5 names, then patch them back onto the QtWidgets module so
@@ -57,6 +62,7 @@ if _PYQT6:
         AcceptRole      = QtWidgets.QMessageBox.ButtonRole.AcceptRole
         RejectRole      = QtWidgets.QMessageBox.ButtonRole.RejectRole
         DestructiveRole = QtWidgets.QMessageBox.ButtonRole.DestructiveRole
+        exec_           = QtWidgets.QMessageBox.exec
 
     class QDialogButtonBox(QtWidgets.QDialogButtonBox):
         Ok     = QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -67,6 +73,7 @@ if _PYQT6:
     class QDialog(QtWidgets.QDialog):
         Accepted = QtWidgets.QDialog.DialogCode.Accepted
         Rejected = QtWidgets.QDialog.DialogCode.Rejected
+        exec_    = QtWidgets.QDialog.exec
 
     class QSizePolicy(QtWidgets.QSizePolicy):
         Expanding = QtWidgets.QSizePolicy.Policy.Expanding
