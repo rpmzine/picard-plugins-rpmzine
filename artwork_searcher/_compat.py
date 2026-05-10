@@ -54,6 +54,9 @@ if _PYQT6:
         Information = QtWidgets.QMessageBox.Icon.Information
         Warning     = QtWidgets.QMessageBox.Icon.Warning
         Critical    = QtWidgets.QMessageBox.Icon.Critical
+        AcceptRole      = QtWidgets.QMessageBox.ButtonRole.AcceptRole
+        RejectRole      = QtWidgets.QMessageBox.ButtonRole.RejectRole
+        DestructiveRole = QtWidgets.QMessageBox.ButtonRole.DestructiveRole
 
     class QDialogButtonBox(QtWidgets.QDialogButtonBox):
         Ok     = QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -102,6 +105,8 @@ if _PYQT6:
         ScrollBarAsNeeded  = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
         ScrollBarAlwaysOff = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         ScrollBarAlwaysOn  = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        UserRole = QtCore.Qt.ItemDataRole.UserRole
+        RichText = QtCore.Qt.TextFormat.RichText
 
         def __getattr__(self, name):
             return getattr(QtCore.Qt, name)
