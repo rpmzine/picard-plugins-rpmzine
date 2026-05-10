@@ -1,17 +1,16 @@
 # Picard 2.x / 3.0 import compatibility shim.
 #
-# In Picard 3.0 (PyInstaller / mypyc bundle) `from PyQt6 import ...` inside a
-# plugin can raise non-ImportError exceptions. We therefore read Qt modules from
-# sys.modules, which Picard has already populated at startup. On Picard 2.x we
-# do a normal PyQt5 import as a fallback.
+# Detection strategy: probe for PyQt6 *features* rather than relying on
+# sys.modules key names, which PyInstaller/mypyc bundles may register
+# differently.  If QMessageBox.StandardButton exists we are on PyQt6 and
+# build compat subclasses; otherwise we are on PyQt5 and do nothing.
 #
-# All register_* helpers use lazy lookup: they resolve from sys.modules at each
-# *call*, not at import time. This makes them safe whether called at module
-# level or inside enable(api), regardless of Picard's initialisation order.
+# exec_() was renamed to exec() in PyQt6.  We add it back as a real Python
+# wrapper method (not a SIP slot alias, which fails with unbound-method errors).
 #
-# PyQt6 moved from flat to scoped enums (QMessageBox.Yes →
-# QMessageBox.StandardButton.Yes etc.). We expose compat subclasses that add
-# the flat names back so plugin code works unchanged in both Qt versions.
+# Qt enum proxy: _QtNS.__getattr__ tries flat access first (PyQt5 style),
+# then searches scoped namespaces (PyQt6 style), so Qt.UserRole etc. work
+# regardless of which Qt binding is in use.
 
 import sys as _sys
 
@@ -29,32 +28,49 @@ QtWidgets = (
     or _sys.modules.get('PyQt5.QtWidgets')
 )
 
-_PYQT6 = bool(_sys.modules.get('PyQt6.QtCore'))
-
 if QtCore is None:
     try:
         from PyQt6 import QtCore, QtGui, QtWidgets
-        _PYQT6 = True
     except Exception:
         from PyQt5 import QtCore, QtGui, QtWidgets
-        _PYQT6 = False
 
-# Behavioral fallback: PyInstaller bundles may not register PyQt6.QtCore in
-# sys.modules under that exact key. Detect by whether Qt uses scoped enums.
-if not _PYQT6 and QtCore is not None:
-    _PYQT6 = hasattr(QtCore.Qt, 'AlignmentFlag')
+# ── Universal Qt namespace proxy ───────────────────────────────────────────────
+# Tries flat access first (PyQt5), then searches scoped enum namespaces (PyQt6).
+_sentinel = object()
+_QT6_SCOPES = (
+    'AlignmentFlag', 'CheckState', 'ScrollBarPolicy', 'ItemDataRole',
+    'TextFormat', 'WindowType', 'CursorShape', 'FocusPolicy',
+    'ContextMenuPolicy', 'Orientation', 'LayoutDirection', 'SortOrder',
+    'MatchFlag', 'ItemFlag', 'TextInteractionFlag', 'ToolButtonStyle',
+    'WindowModality', 'Key', 'Modifier', 'DropAction', 'ScrollHint',
+)
 
-# ── PyQt6 scoped-enum compatibility ────────────────────────────────────────────
-# PyQt6 replaced flat enums with scoped ones. We create thin subclasses that
-# re-expose the PyQt5 names, then patch them back onto the QtWidgets module so
-# that `QtWidgets.QMessageBox.Yes` etc. continue to work.
+class _QtNS:
+    def __getattr__(self, name):
+        val = getattr(QtCore.Qt, name, _sentinel)
+        if val is not _sentinel:
+            return val
+        for _scope_name in _QT6_SCOPES:
+            _scope = getattr(QtCore.Qt, _scope_name, None)
+            if _scope is not None:
+                val = getattr(_scope, name, _sentinel)
+                if val is not _sentinel:
+                    return val
+        raise AttributeError(f"Qt has no attribute {name!r}")
 
-if _PYQT6:
+Qt = _QtNS()
+
+# ── PyQt6 scoped-enum widget compat ────────────────────────────────────────────
+# Probe by trying to access QMessageBox.StandardButton (PyQt6 only).
+# On PyQt5 the AttributeError is caught and we leave Qt widgets untouched.
+try:
+    _MB = QtWidgets.QMessageBox.StandardButton  # KeyError / AttributeError on PyQt5
+
     class QMessageBox(QtWidgets.QMessageBox):
-        Yes         = QtWidgets.QMessageBox.StandardButton.Yes
-        No          = QtWidgets.QMessageBox.StandardButton.No
-        Ok          = QtWidgets.QMessageBox.StandardButton.Ok
-        Cancel      = QtWidgets.QMessageBox.StandardButton.Cancel
+        Yes         = _MB.Yes
+        No          = _MB.No
+        Ok          = _MB.Ok
+        Cancel      = _MB.Cancel
         Question    = QtWidgets.QMessageBox.Icon.Question
         Information = QtWidgets.QMessageBox.Icon.Information
         Warning     = QtWidgets.QMessageBox.Icon.Warning
@@ -62,7 +78,7 @@ if _PYQT6:
         AcceptRole      = QtWidgets.QMessageBox.ButtonRole.AcceptRole
         RejectRole      = QtWidgets.QMessageBox.ButtonRole.RejectRole
         DestructiveRole = QtWidgets.QMessageBox.ButtonRole.DestructiveRole
-        exec_           = QtWidgets.QMessageBox.exec
+        def exec_(self): return super().exec()
 
     class QDialogButtonBox(QtWidgets.QDialogButtonBox):
         Ok     = QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -73,7 +89,7 @@ if _PYQT6:
     class QDialog(QtWidgets.QDialog):
         Accepted = QtWidgets.QDialog.DialogCode.Accepted
         Rejected = QtWidgets.QDialog.DialogCode.Rejected
-        exec_    = QtWidgets.QDialog.exec
+        def exec_(self): return super().exec()
 
     class QSizePolicy(QtWidgets.QSizePolicy):
         Expanding = QtWidgets.QSizePolicy.Policy.Expanding
@@ -90,42 +106,23 @@ if _PYQT6:
         Raised      = QtWidgets.QFrame.Shadow.Raised
         Plain       = QtWidgets.QFrame.Shadow.Plain
 
-    # Patch back onto QtWidgets so code using QtWidgets.QMessageBox.Yes etc. works
-    QtWidgets.QMessageBox     = QMessageBox
+    # Patch compat classes back so QtWidgets.QMessageBox.Yes etc. work everywhere
+    QtWidgets.QMessageBox      = QMessageBox
     QtWidgets.QDialogButtonBox = QDialogButtonBox
-    QtWidgets.QDialog         = QDialog
-    QtWidgets.QSizePolicy     = QSizePolicy
-    QtWidgets.QFrame          = QFrame
+    QtWidgets.QDialog          = QDialog
+    QtWidgets.QSizePolicy      = QSizePolicy
+    QtWidgets.QFrame           = QFrame
 
-    # Qt namespace proxy: exposes PyQt5-style flat names for the common enums
-    class _QtNS:
-        AlignCenter  = QtCore.Qt.AlignmentFlag.AlignCenter
-        AlignLeft    = QtCore.Qt.AlignmentFlag.AlignLeft
-        AlignRight   = QtCore.Qt.AlignmentFlag.AlignRight
-        AlignTop     = QtCore.Qt.AlignmentFlag.AlignTop
-        AlignBottom  = QtCore.Qt.AlignmentFlag.AlignBottom
-        AlignVCenter = QtCore.Qt.AlignmentFlag.AlignVCenter
-        AlignHCenter = QtCore.Qt.AlignmentFlag.AlignHCenter
-        Checked          = QtCore.Qt.CheckState.Checked
-        Unchecked        = QtCore.Qt.CheckState.Unchecked
-        PartiallyChecked = QtCore.Qt.CheckState.PartiallyChecked
-        ScrollBarAsNeeded  = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        ScrollBarAlwaysOff = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        ScrollBarAlwaysOn  = QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-        UserRole = QtCore.Qt.ItemDataRole.UserRole
-        RichText = QtCore.Qt.TextFormat.RichText
+    _PYQT6 = True
 
-        def __getattr__(self, name):
-            return getattr(QtCore.Qt, name)
-
-    Qt = _QtNS()
-else:
-    QMessageBox     = QtWidgets.QMessageBox
+except AttributeError:
+    # PyQt5: flat enums already work, no compat subclasses needed
+    QMessageBox      = QtWidgets.QMessageBox
     QDialogButtonBox = QtWidgets.QDialogButtonBox
-    QDialog         = QtWidgets.QDialog
-    QSizePolicy     = QtWidgets.QSizePolicy
-    QFrame          = QtWidgets.QFrame
-    Qt              = QtCore.Qt
+    QDialog          = QtWidgets.QDialog
+    QSizePolicy      = QtWidgets.QSizePolicy
+    QFrame           = QtWidgets.QFrame
+    _PYQT6 = False
 
 # ── Remaining widget aliases ───────────────────────────────────────────────────
 QCheckBox    = QtWidgets.QCheckBox
@@ -141,7 +138,8 @@ QVBoxLayout  = QtWidgets.QVBoxLayout
 QWidget      = QtWidgets.QWidget
 
 # ── BaseAction ─────────────────────────────────────────────────────────────────
-_QActionBase = QtGui.QAction if _PYQT6 else QtWidgets.QAction
+# QAction moved from QtWidgets to QtGui in Qt6/PyQt6.
+_QActionBase = getattr(QtGui, 'QAction', None) or getattr(QtWidgets, 'QAction', None)
 
 
 class BaseAction(_QActionBase):
