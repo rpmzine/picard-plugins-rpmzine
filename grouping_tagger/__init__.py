@@ -9,9 +9,13 @@ PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
 from picard import config, log
 from picard.config import BoolOption, TextOption, ListOption
-from picard.ui.itemviews import BaseAction, register_album_action, register_track_action, register_file_action, register_cluster_action
-from picard.ui.options import OptionsPage, register_options_page
-from PyQt5 import QtWidgets, QtCore
+from ._compat import (
+    OptionsPage,
+    BaseAction,
+    QtCore, QtWidgets,
+    register_album_action, register_cluster_action,
+    register_file_action, register_options_page, register_track_action,
+)
 import json
 
 # Configuration options - Detection enables
@@ -2335,52 +2339,38 @@ def create_fixed_action(tag_name, tag_value):
     return GroupingActionFixed
 
 
-# Register the auto-detection action
 _grouping_action_auto = GroupingActionAuto()
-register_album_action(_grouping_action_auto)
-register_track_action(_grouping_action_auto)
-register_file_action(_grouping_action_auto)
-register_cluster_action(_grouping_action_auto)
 
-# Register fixed tag actions (defaults + custom)
-all_fixed_tags = get_all_fixed_tags()
-for tag_name, tag_value in all_fixed_tags.items():
-    ActionClass = create_fixed_action(tag_name, tag_value)
-    action = ActionClass()
-    register_album_action(action)
-    register_track_action(action)
-    register_file_action(action)
-    register_cluster_action(action)
 
-log.info(f"Grouping Tagger: Registered {len(all_fixed_tags)} fixed tag actions")
+def enable(api):
+    # Auto-detection action
+    for _fn in (register_album_action, register_track_action,
+                register_file_action, register_cluster_action):
+        _fn(_grouping_action_auto)
 
-# Register template actions
-try:
-    # Load templates from JSON file, Picard settings, or defaults
+    # Fixed tag actions
+    all_fixed_tags = get_all_fixed_tags()
+    for tag_name, tag_value in all_fixed_tags.items():
+        ActionClass = create_fixed_action(tag_name, tag_value)
+        action = ActionClass()
+        for _fn in (register_album_action, register_track_action,
+                    register_file_action, register_cluster_action):
+            _fn(action)
+    log.info(f"Grouping Tagger: Registered {len(all_fixed_tags)} fixed tag actions")
+
+    # Template actions from JSON / Picard settings
     templates = load_templates_from_sources()
-
-    # Register each template as a context menu action
     for template in templates:
         template_name = template.get("name", "Unnamed")
         template_string = template.get("template", "")
         divider = template.get("divider", " | ")
-
         if template_string:
             ActionClass = create_template_action(template_name, template_string, divider)
             action = ActionClass()
-            register_album_action(action)
-            register_track_action(action)
-            register_file_action(action)
-            register_cluster_action(action)
-
+            for _fn in (register_album_action, register_track_action,
+                        register_file_action, register_cluster_action):
+                _fn(action)
     log.info(f"Grouping Tagger: Registered {len(templates)} template actions")
-except Exception as e:
-    log.error(f"Grouping Tagger: Failed to register template actions: {e}")
 
-# Register the options page
-try:
     register_options_page(GroupingOptionsPage)
-except Exception as e:
-    log.error(f"Grouping Tagger: Options page registration failed: {e}")
-
-log.info("Grouping Tagger: Plugin loaded successfully")
+    log.info("Grouping Tagger: Plugin loaded")
