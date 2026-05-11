@@ -18,7 +18,18 @@ class RefreshFromDiskAction(BaseAction):
     def callback(self, objs):
         try:
             tagger = getattr(getattr(self, 'api', None), 'tagger', None) or getattr(self, 'tagger', None)
-            files = list(tagger.get_files_from_objects(objs))
+
+            # Picard 3.0 V3: objects expose .files directly (Cluster/Album)
+            # Picard 2.x V2: use tagger.get_files_from_objects
+            files = []
+            for obj in objs:
+                if hasattr(obj, 'files'):
+                    files.extend(obj.files)
+                elif hasattr(obj, 'filename'):
+                    files.append(obj)
+            if not files and tagger and hasattr(tagger, 'get_files_from_objects'):
+                files = list(tagger.get_files_from_objects(objs))
+
             if not files:
                 log.debug("Cluster Refresh: No files found in selection")
                 return

@@ -670,6 +670,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
         self.setMinimumSize(800, 600)
         self.create_ui()
         self.load_templates()
+        self.template_list.itemDoubleClicked.connect(lambda: self.edit_template())
 
     def create_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
@@ -1839,7 +1840,8 @@ class SuffixOptionsPage(OptionsPage):
 
         # Connect signals
         self._connect_signals()
-        
+        self.template_list.itemDoubleClicked.connect(lambda: self.edit_template_click())
+
         layout.addStretch()
     
     def _add_header(self, layout):
@@ -1868,9 +1870,7 @@ class SuffixOptionsPage(OptionsPage):
         self.template_list.setMaximumHeight(200)
         template_layout.addWidget(self.template_list)
 
-        # Management buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
-
+        # Management buttons (two rows to avoid overflow)
         self.add_template_btn = QtWidgets.QPushButton("Add Template")
         self.edit_template_btn = QtWidgets.QPushButton("Edit")
         self.delete_template_btn = QtWidgets.QPushButton("Delete")
@@ -1878,15 +1878,24 @@ class SuffixOptionsPage(OptionsPage):
         self.export_json_btn = QtWidgets.QPushButton("Export JSON")
         self.import_json_btn = QtWidgets.QPushButton("Import JSON")
 
-        buttons_layout.addWidget(self.add_template_btn)
-        buttons_layout.addWidget(self.edit_template_btn)
-        buttons_layout.addWidget(self.delete_template_btn)
-        buttons_layout.addWidget(self.reset_templates_btn)
-        buttons_layout.addWidget(self.export_json_btn)
-        buttons_layout.addWidget(self.import_json_btn)
-        buttons_layout.addStretch()
+        buttons_row1 = QtWidgets.QHBoxLayout()
+        buttons_row1.addWidget(self.add_template_btn)
+        buttons_row1.addWidget(self.edit_template_btn)
+        buttons_row1.addWidget(self.delete_template_btn)
+        buttons_row1.addStretch()
 
-        template_layout.addLayout(buttons_layout)
+        buttons_row2 = QtWidgets.QHBoxLayout()
+        buttons_row2.addWidget(self.reset_templates_btn)
+        buttons_row2.addWidget(self.export_json_btn)
+        buttons_row2.addWidget(self.import_json_btn)
+        buttons_row2.addStretch()
+
+        buttons_vbox = QtWidgets.QVBoxLayout()
+        buttons_vbox.setSpacing(4)
+        buttons_vbox.addLayout(buttons_row1)
+        buttons_vbox.addLayout(buttons_row2)
+
+        template_layout.addLayout(buttons_vbox)
 
         # Auto-detection button
         self.manage_detection_btn = QtWidgets.QPushButton("Configure Auto-Detection...")

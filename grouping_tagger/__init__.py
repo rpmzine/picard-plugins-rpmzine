@@ -12,7 +12,7 @@ from picard.config import BoolOption, TextOption, ListOption
 from ._compat import (
     OptionsPage,
     BaseAction,
-    QtCore, QtWidgets,
+    Qt, QtCore, QtWidgets,
     register_album_action, register_cluster_action,
     register_file_action, register_options_page, register_track_action,
 )
