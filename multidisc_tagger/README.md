@@ -2,8 +2,8 @@
 
 **Version:** 2.6.0
 **Author:** rpmzine  
-**API Versions:** 2.10, 2.11, 2.12, 2.13  
-**License:** Not specified
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
+**License:** MIT
 
 ## Description
 

@@ -52,8 +52,8 @@ Settings are automatically saved to Picard's configuration. Each tag has three a
 
 ## Technical Details
 
-- **Version**: 0.9.2
-- **API Compatibility**: Picard 2.10, 2.11, 2.12, 2.13
+- **Version**: 0.9.5
+- **API Compatibility**: Picard 2.10, 2.11, 2.12, 2.13, 3.0
 - **License**: MIT
 - **Processing**: Uses Picard's track metadata processor for real-time tag modification
 

@@ -1,8 +1,8 @@
 # Album Subfolder
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Author:** rpmzine
-**API Versions:** 2.10, 2.11, 2.12, 2.13
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** GPL-2.0
 
 ## Description
@@ -40,6 +40,12 @@ Subdirectories: all (e.g. `ARTWORK/`, `Scans/`)
 - Thread-safe: works correctly when Picard saves multiple files in parallel
 
 ## Changelog
+
+### Version 2.3.0
+
+- Added Picard 3.0 (`enable(api)` V3 API) compatibility
+- Per-save confirmation dialog: move to subfolder, skip once, or disable permanently
+- Options page with enable/disable checkbox (`Options → Plugins → Album Subfolder`)
 
 ### Version 2.2.0
 - Thread-safe source-directory tracking via lock-protected `_source_map`

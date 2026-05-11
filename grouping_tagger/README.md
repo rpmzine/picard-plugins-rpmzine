@@ -1,7 +1,8 @@
 # Grouping Tagger
 
-**Version:** 3.1.0
+**Version:** 3.1.2
 **Author:** rpmzine
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** MIT
 
 A MusicBrainz Picard plugin that automatically tags the GROUPING field with source and format information.
@@ -417,6 +418,12 @@ Format detection uses the `~format`, `~bits_per_sample`, and `~sample_rate` meta
 - Tag customization: Select or enter custom text for each detection type
 - Fixed tag actions: Apply specific tags directly from right-click menu
 - Live preview of tag combinations
+
+### 3.1.2
+
+- Picard 3.0 compatibility: `enable(api)` V3 API; actions registered via `api.register_*` with classes
+- Fixed "name 'Qt' is not defined" error when importing the plugin on first run
+- `TITLE` attribute added to all action classes for correct menu label display in Picard 3.0
 
 ### 1.0.0
 

@@ -1,8 +1,8 @@
 # Suffix Appender Plugin
 
-**Version:** 2.3.1
+**Version:** 2.4.0
 **Author:** rpmzine + contributors
-**API Versions:** 2.10, 2.11, 2.12, 2.13
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** MIT
 
 ## Description
@@ -333,6 +333,13 @@ This plugin works well with:
 - Other metadata enhancement plugins
 
 ## Changelog
+
+### Version 2.4.0
+
+- Picard 3.0 compatibility: `enable(api)` V3 API; preset actions registered via `api.register_*` with classes
+- Fixed button layout overflow in `SuffixOptionsPage` — Reset/Export/Import buttons split into two rows so Edit button is no longer obscured
+- Added double-click handler on template list for faster editing
+- `TITLE` attribute on all preset action classes for correct Picard 3.0 menu labels
 
 ### Version 2.3.1
 

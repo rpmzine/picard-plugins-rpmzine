@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Author:** rpmzine
-**API Versions:** 2.10, 2.11, 2.12, 2.13
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** MIT
 
 ## Description
@@ -39,3 +39,4 @@ Works with any file format Picard supports: FLAC, M4A/AAC, MP3, AIFF, WAV, etc.
 - Initial release
 - "Refresh from Disk" action available on clusters and individual cluster files
 - Supports all file formats: FLAC, M4A/AAC, MP3, AIFF, WAV, and more
+- Picard 3.0 compatible: uses V3 API (`enable(api)`) and reads `.files` attribute directly from cluster/album objects

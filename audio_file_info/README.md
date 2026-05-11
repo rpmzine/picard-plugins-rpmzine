@@ -2,7 +2,7 @@
 
 **Version:** 4.2
 **Author:** rpmzine
-**API Versions:** 2.10, 2.11, 2.12, 2.13
+**API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 
 ## Description
 
