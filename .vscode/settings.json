@@ -1,3 +1,4 @@
 {
-  "dotnetAcquisitionExtension.existingDotnetPath": "/usr/local/share/dotnet/dotnet"
+  "dotnetAcquisitionExtension.existingDotnetPath": "/usr/local/share/dotnet/dotnet",
+  "flake8.args": []
 }
