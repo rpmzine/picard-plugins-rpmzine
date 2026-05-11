@@ -9,7 +9,7 @@ PLUGIN_DESCRIPTION = (
     "Requires 'Move additional files' to be DISABLED in Picard options."
 )
 PLUGIN_VERSION = "2.3.0"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
 

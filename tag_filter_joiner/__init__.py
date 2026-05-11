@@ -2,7 +2,7 @@ PLUGIN_NAME = "Tag Filter & Joiner"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Ignore selected tags and/or join multi-value tags with custom separators."
 PLUGIN_VERSION = "0.9.5"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
@@ -74,7 +74,7 @@ class TagFilterOptionsPage(OptionsPage):
         grid.setSpacing(5)
         
         # Headers with better styling
-        header_style = "font-weight: bold; padding: 5px; background-color: #f0f0f0;"
+        header_style = "font-weight: bold; padding: 5px;"
         
         tag_header = QLabel("Tag")
         tag_header.setStyleSheet(header_style)
@@ -103,34 +103,28 @@ class TagFilterOptionsPage(OptionsPage):
             # Tag name
             tag_label = QLabel(tag)
             tag_label.setMinimumWidth(200)
-            if row % 2 == 0:  # Alternating row colors
-                tag_label.setStyleSheet("background-color: #f9f9f9; padding: 2px;")
+            if row % 2 == 0:
+                tag_label.setStyleSheet("padding: 2px;")
             grid.addWidget(tag_label, row, 0)
             
             # Ignore checkbox
             cb_ignore = QCheckBox()
             cb_ignore.setMinimumWidth(80)
             self.ignore_checkboxes[tag] = cb_ignore
-            if row % 2 == 0:
-                cb_ignore.setStyleSheet("background-color: #f9f9f9;")
             grid.addWidget(cb_ignore, row, 1, Qt.AlignCenter)
-            
-            # Join checkbox  
+
+            # Join checkbox
             cb_join = QCheckBox()
             cb_join.setMinimumWidth(120)
             self.join_checkboxes[tag] = cb_join
-            if row % 2 == 0:
-                cb_join.setStyleSheet("background-color: #f9f9f9;")
             grid.addWidget(cb_join, row, 2, Qt.AlignCenter)
-            
+
             # Separator input
             sep = QLineEdit(" / ")
             sep.setPlaceholderText("e.g. ' / ' or '; '")
             sep.setEnabled(False)
             sep.setMinimumWidth(150)
             self.separators[tag] = sep
-            if row % 2 == 0:
-                sep.setStyleSheet("background-color: #f9f9f9;")
             grid.addWidget(sep, row, 3)
             
             # Connect checkbox to enable/disable separator

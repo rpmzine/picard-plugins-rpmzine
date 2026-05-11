@@ -3,7 +3,7 @@ PLUGIN_NAME = "Audio File Info"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Adds bits-per-sample, sample rate, channels and codec (if available) to metadata and offers to append [BPS-SR] to album titles."
 PLUGIN_VERSION = "4.2"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 
 import os
 import shutil
@@ -621,9 +621,11 @@ def _process_track_promo(album, metadata, track, release):
 
 class ProcessSelection(BaseAction):
     NAME = "Process technical tags"
+    TITLE = "Process technical tags"
 
     def callback(self, objs):
-        files = self.tagger.get_files_from_objects(objs)
+        tagger = getattr(getattr(self, 'api', None), 'tagger', None) or getattr(self, 'tagger', None)
+        files = tagger.get_files_from_objects(objs)
         if not files:
             return
         processed = 0
@@ -633,9 +635,6 @@ class ProcessSelection(BaseAction):
                 processed += 1
         log.debug("Audio File Info: ProcessSelection processed %d files", processed)
         QtWidgets.QMessageBox.information(None, "Process technical tags", f"Processed {processed} files")
-
-
-_process_selection_action = ProcessSelection()
 
 
 def aggregate_technical_tags_to_album(tagger, metadata, release):
@@ -660,8 +659,14 @@ def enable(api):
     register_track_metadata_processor(propagate_file_tags_to_track, priority=60)
     register_track_metadata_processor(_process_track_promo, priority=40)
     register_album_metadata_processor(aggregate_technical_tags_to_album)
-    register_file_action(_process_selection_action)
-    register_track_action(_process_selection_action)
-    register_cluster_action(_process_selection_action)
     register_file_post_load_processor(add_bits_per_sample)
+    if hasattr(api, 'register_cluster_action'):
+        api.register_file_action(ProcessSelection)
+        api.register_track_action(ProcessSelection)
+        api.register_cluster_action(ProcessSelection)
+    else:
+        _action = ProcessSelection()
+        register_file_action(_action)
+        register_track_action(_action)
+        register_cluster_action(_action)
     log.info("Audio File Info: Plugin loaded")

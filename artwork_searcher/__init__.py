@@ -3,7 +3,7 @@ PLUGIN_NAME = "Artwork Searcher"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Opens a browser image search for album artwork using artist and album title (or folder name)."
 PLUGIN_VERSION = "1.0.0"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
 
@@ -72,6 +72,7 @@ def _collect_queries(objs):
 
 class SearchArtworkGoogle(BaseAction):
     NAME = "Search Artwork → Google Images"
+    TITLE = "Search Artwork → Google Images"
 
     def callback(self, objs):
         for q in _collect_queries(objs):
@@ -87,6 +88,7 @@ class SearchArtworkGoogle(BaseAction):
 
 class SearchArtworkBing(BaseAction):
     NAME = "Search Artwork → Bing Images"
+    TITLE = "Search Artwork → Bing Images"
 
     def callback(self, objs):
         for q in _collect_queries(objs):
@@ -103,14 +105,18 @@ class SearchArtworkBing(BaseAction):
 # Registration
 # ---------------------------------------------------------------------------
 
-_google_action = SearchArtworkGoogle()
-_bing_action = SearchArtworkBing()
-
-
 def enable(api):
-    for _action in (_google_action, _bing_action):
-        register_file_action(_action)
-        register_track_action(_action)
-        register_cluster_action(_action)
-        register_album_action(_action)
+    if hasattr(api, 'register_cluster_action'):
+        for cls in (SearchArtworkGoogle, SearchArtworkBing):
+            for fn_name in ('register_file_action', 'register_track_action',
+                            'register_cluster_action', 'register_album_action'):
+                fn = getattr(api, fn_name, None)
+                if fn:
+                    fn(cls)
+    else:
+        for _action in (SearchArtworkGoogle(), SearchArtworkBing()):
+            register_file_action(_action)
+            register_track_action(_action)
+            register_cluster_action(_action)
+            register_album_action(_action)
     log.debug("Artwork Searcher: actions registered")

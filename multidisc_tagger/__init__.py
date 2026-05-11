@@ -2,7 +2,7 @@ PLUGIN_NAME = "Multidisc Tagger"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "When multidisc releases are detected, this plugin tags them appropriately, using Work and Movement similar to Classical Music tagging. Also allows manual multidisc creation via context menu."
 PLUGIN_VERSION = "2.6.0"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 
 from picard import log
 from ._compat import (
@@ -129,6 +129,7 @@ class DiscSubtitleDialog(QtWidgets.QDialog):
 
 class MakeMultidiscAction(BaseAction):
     NAME = "Make it a Multidisc"
+    TITLE = "Make it a Multidisc"
     
     def __init__(self):
         super().__init__()
@@ -419,12 +420,14 @@ def set_multidisc_tags_track(tagger, metadata, track, release):
     if title:
         metadata["movement"] = title
 
-_multidisc_action = MakeMultidiscAction()
-
-
 def enable(api):
     register_album_metadata_processor(set_multidisc_tags_album)
     register_track_metadata_processor(set_multidisc_tags_track)
-    register_album_action(_multidisc_action)
-    register_cluster_action(_multidisc_action)
+    if hasattr(api, 'register_cluster_action'):
+        api.register_album_action(MakeMultidiscAction)
+        api.register_cluster_action(MakeMultidiscAction)
+    else:
+        _action = MakeMultidiscAction()
+        register_album_action(_action)
+        register_cluster_action(_action)
     log.info("Multidisc Tagger: Plugin loaded")

@@ -3,7 +3,7 @@ PLUGIN_NAME = "Grouping Tagger"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Tag GROUPING field with customizable source and format tags via context menu. Uses JSON templates with detection variables (Vinyl/CD/Digital source, format, quality tier, channels, bootleg, remaster). Includes configurable fixed tags and auto-detection matrix."
 PLUGIN_VERSION = "3.1.2"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
@@ -1040,7 +1040,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 self.template_list.addItem(name)
                 # Store full template data in item
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
         except Exception as e:
             log.error(f"Grouping Tagger: Error loading templates: {e}")
@@ -1051,7 +1051,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -1083,7 +1083,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 # Add to list
                 self.template_list.addItem(template_data["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template_data)
+                item.setData(Qt.UserRole, template_data)
 
                 log.info(f"Grouping Tagger: Added template '{template_data['name']}'")
         except Exception as e:
@@ -1100,7 +1100,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 )
                 return
 
-            template_data = current_item.data(QtCore.Qt.UserRole)
+            template_data = current_item.data(Qt.UserRole)
             dialog = TemplateEditorDialog(template_data, parent=self)
 
             if dialog.exec_() == QtWidgets.QDialog.Accepted:
@@ -1116,7 +1116,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
 
                 # Update item
                 current_item.setText(new_data["name"])
-                current_item.setData(QtCore.Qt.UserRole, new_data)
+                current_item.setData(Qt.UserRole, new_data)
 
                 log.info(f"Grouping Tagger: Updated template '{new_data['name']}'")
         except Exception as e:
@@ -1165,7 +1165,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 for template in DEFAULT_TEMPLATES:
                     self.template_list.addItem(template["name"])
                     item = self.template_list.item(self.template_list.count() - 1)
-                    item.setData(QtCore.Qt.UserRole, template)
+                    item.setData(Qt.UserRole, template)
 
                 log.info("Grouping Tagger: Reset templates to defaults")
         except Exception as e:
@@ -1178,7 +1178,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -1277,7 +1277,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             for template in valid_templates:
                 self.template_list.addItem(template["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
             QtWidgets.QMessageBox.information(
                 self, "Import Successful",
@@ -1375,7 +1375,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
                 display = f"{name}: {value}"
                 self.fixed_tags_list.addItem(display)
                 item = self.fixed_tags_list.item(self.fixed_tags_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, {"name": name, "value": value})
+                item.setData(Qt.UserRole, {"name": name, "value": value})
 
         except Exception as e:
             log.error(f"Grouping Tagger: Error loading fixed tags: {e}")
@@ -1388,7 +1388,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
             # Collect all tags from list
             for i in range(self.fixed_tags_list.count()):
                 item = self.fixed_tags_list.item(i)
-                data = item.data(QtCore.Qt.UserRole)
+                data = item.data(Qt.UserRole)
                 name = data["name"]
                 value = data["value"]
 
@@ -1419,7 +1419,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
             # Check if already exists
             for i in range(self.fixed_tags_list.count()):
                 item = self.fixed_tags_list.item(i)
-                data = item.data(QtCore.Qt.UserRole)
+                data = item.data(Qt.UserRole)
                 if data["name"] == name:
                     QtWidgets.QMessageBox.warning(
                         self, "Duplicate Tag",
@@ -1443,7 +1443,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
             display = f"{name}: {value}"
             self.fixed_tags_list.addItem(display)
             item = self.fixed_tags_list.item(self.fixed_tags_list.count() - 1)
-            item.setData(QtCore.Qt.UserRole, {"name": name, "value": value})
+            item.setData(Qt.UserRole, {"name": name, "value": value})
 
             log.info(f"Grouping Tagger: Added fixed tag '{name}: {value}'")
 
@@ -1461,7 +1461,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
                 )
                 return
 
-            data = current_item.data(QtCore.Qt.UserRole)
+            data = current_item.data(Qt.UserRole)
             old_name = data["name"]
             old_value = data["value"]
 
@@ -1479,7 +1479,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
 
             # Update item
             current_item.setText(f"{old_name}: {new_value}")
-            current_item.setData(QtCore.Qt.UserRole, {"name": old_name, "value": new_value})
+            current_item.setData(Qt.UserRole, {"name": old_name, "value": new_value})
 
             log.info(f"Grouping Tagger: Edited fixed tag '{old_name}': '{old_value}' → '{new_value}'")
 
@@ -1497,7 +1497,7 @@ class FixedTagsManagerDialog(QtWidgets.QDialog):
                 )
                 return
 
-            data = current_item.data(QtCore.Qt.UserRole)
+            data = current_item.data(Qt.UserRole)
             name = data["name"]
 
             # Confirm deletion
@@ -2010,6 +2010,7 @@ class GroupingOptionsPage(OptionsPage):
 class GroupingActionAuto(BaseAction):
     """Auto-detection action using configured rules"""
     NAME = "Auto-Detect"
+    TITLE = "Auto-Detect"
     MENU = ("Grouping",)
 
     def callback(self, objs):
@@ -2169,6 +2170,7 @@ def create_template_action(template_name, template_string, divider):
     class GroupingActionTemplate(BaseAction):
         """Template action - applies a template pattern"""
         NAME = f"Template: {template_name}"
+        TITLE = f"Template: {template_name}"
         MENU = ("Grouping",)
 
         def __init__(self):
@@ -2260,6 +2262,7 @@ def create_fixed_action(tag_name, tag_value):
     class GroupingActionFixed(BaseAction):
         """Fixed tag action - applies a specific tag"""
         NAME = f"Add: {tag_value}"
+        TITLE = f"Add: {tag_value}"
         MENU = ("Grouping",)
 
         def __init__(self):
@@ -2339,23 +2342,28 @@ def create_fixed_action(tag_name, tag_value):
     return GroupingActionFixed
 
 
-_grouping_action_auto = GroupingActionAuto()
-
-
 def enable(api):
+    use_v3 = hasattr(api, 'register_cluster_action')
+    _action_fns = (
+        (api.register_album_action, api.register_track_action,
+         api.register_file_action, api.register_cluster_action)
+        if use_v3 else
+        (register_album_action, register_track_action,
+         register_file_action, register_cluster_action)
+    )
+
+    def _reg(cls_or_instance):
+        for fn in _action_fns:
+            fn(cls_or_instance)
+
     # Auto-detection action
-    for _fn in (register_album_action, register_track_action,
-                register_file_action, register_cluster_action):
-        _fn(_grouping_action_auto)
+    _reg(GroupingActionAuto if use_v3 else GroupingActionAuto())
 
     # Fixed tag actions
     all_fixed_tags = get_all_fixed_tags()
     for tag_name, tag_value in all_fixed_tags.items():
         ActionClass = create_fixed_action(tag_name, tag_value)
-        action = ActionClass()
-        for _fn in (register_album_action, register_track_action,
-                    register_file_action, register_cluster_action):
-            _fn(action)
+        _reg(ActionClass if use_v3 else ActionClass())
     log.info(f"Grouping Tagger: Registered {len(all_fixed_tags)} fixed tag actions")
 
     # Template actions from JSON / Picard settings
@@ -2366,10 +2374,7 @@ def enable(api):
         divider = template.get("divider", " | ")
         if template_string:
             ActionClass = create_template_action(template_name, template_string, divider)
-            action = ActionClass()
-            for _fn in (register_album_action, register_track_action,
-                        register_file_action, register_cluster_action):
-                _fn(action)
+            _reg(ActionClass if use_v3 else ActionClass())
     log.info(f"Grouping Tagger: Registered {len(templates)} template actions")
 
     register_options_page(GroupingOptionsPage)

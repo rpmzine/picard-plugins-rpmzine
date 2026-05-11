@@ -3,7 +3,7 @@ PLUGIN_NAME = "Suffix Appender"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Append custom, formula-based suffixes to Album, Track Title, Comment, Disc Subtitle, or Work fields via context menu. Uses JSON templates with metadata variables (country, format, bit depth, sample rate, bitstream codec, etc.). Includes EP/Single/Vinyl/CD detection."
 PLUGIN_VERSION = "2.4.0"
-PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13"]
+PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
 
@@ -572,7 +572,7 @@ class TemplateEditorDialog(QtWidgets.QDialog):
             "• kHz: <code>&lt;sample_rate|khz&gt;</code> = smart kHz (192000 → 192, 44100 → 44)"
         )
         enhancers_label.setWordWrap(True)
-        enhancers_label.setTextFormat(QtCore.Qt.RichText)
+        enhancers_label.setTextFormat(Qt.RichText)
         enhancers_label.setStyleSheet("font-size: 10px; margin-top: 8px; padding: 8px; background-color: palette(midlight); border-radius: 4px;")
         variables_outer_layout.addWidget(enhancers_label)
 
@@ -688,8 +688,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
         self.template_list.setMinimumHeight(200)
         layout.addWidget(self.template_list)
 
-        # Template buttons
-        template_buttons = QtWidgets.QHBoxLayout()
+        # Template buttons (two rows to avoid overflow)
         self.add_template_btn = QtWidgets.QPushButton("Add Template")
         self.edit_template_btn = QtWidgets.QPushButton("Edit")
         self.delete_template_btn = QtWidgets.QPushButton("Delete")
@@ -704,13 +703,22 @@ class TemplateManagerDialog(QtWidgets.QDialog):
         self.export_json_btn.clicked.connect(self.export_to_json)
         self.import_json_btn.clicked.connect(self.import_from_json)
 
-        template_buttons.addWidget(self.add_template_btn)
-        template_buttons.addWidget(self.edit_template_btn)
-        template_buttons.addWidget(self.delete_template_btn)
-        template_buttons.addWidget(self.reset_templates_btn)
-        template_buttons.addWidget(self.export_json_btn)
-        template_buttons.addWidget(self.import_json_btn)
-        template_buttons.addStretch()
+        template_row1 = QtWidgets.QHBoxLayout()
+        template_row1.addWidget(self.add_template_btn)
+        template_row1.addWidget(self.edit_template_btn)
+        template_row1.addWidget(self.delete_template_btn)
+        template_row1.addStretch()
+
+        template_row2 = QtWidgets.QHBoxLayout()
+        template_row2.addWidget(self.reset_templates_btn)
+        template_row2.addWidget(self.export_json_btn)
+        template_row2.addWidget(self.import_json_btn)
+        template_row2.addStretch()
+
+        template_buttons = QtWidgets.QVBoxLayout()
+        template_buttons.setSpacing(4)
+        template_buttons.addLayout(template_row1)
+        template_buttons.addLayout(template_row2)
 
         layout.addLayout(template_buttons)
 
@@ -747,7 +755,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 self.template_list.addItem(name)
                 # Store full template data in item
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
         except Exception as e:
             log.error(f"Suffix Appender: Error loading templates: {e}")
@@ -758,7 +766,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -790,7 +798,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 # Add to list
                 self.template_list.addItem(template_data["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template_data)
+                item.setData(Qt.UserRole, template_data)
 
                 log.info(f"Suffix Appender: Added template '{template_data['name']}'")
         except Exception as e:
@@ -807,7 +815,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 )
                 return
 
-            template_data = current_item.data(QtCore.Qt.UserRole)
+            template_data = current_item.data(Qt.UserRole)
             dialog = TemplateEditorDialog(template_data, parent=self)
 
             if dialog.exec_() == QtWidgets.QDialog.Accepted:
@@ -823,7 +831,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
 
                 # Update item
                 current_item.setText(new_data["name"])
-                current_item.setData(QtCore.Qt.UserRole, new_data)
+                current_item.setData(Qt.UserRole, new_data)
 
                 log.info(f"Suffix Appender: Updated template '{new_data['name']}'")
         except Exception as e:
@@ -873,7 +881,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
                 for template in DEFAULT_TEMPLATES:
                     self.template_list.addItem(template["name"])
                     item = self.template_list.item(self.template_list.count() - 1)
-                    item.setData(QtCore.Qt.UserRole, template)
+                    item.setData(Qt.UserRole, template)
 
                 log.info("Suffix Appender: Reset templates to defaults")
         except Exception as e:
@@ -886,7 +894,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -985,7 +993,7 @@ class TemplateManagerDialog(QtWidgets.QDialog):
             for template in valid_templates:
                 self.template_list.addItem(template["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
             QtWidgets.QMessageBox.information(
                 self, "Import Successful",
@@ -2081,7 +2089,7 @@ class SuffixOptionsPage(OptionsPage):
             "• kHz: <code>&lt;sample_rate|khz&gt;</code> = smart kHz (192000 → 192, 44100 → 44)"
         )
         transforms_label.setWordWrap(True)
-        transforms_label.setTextFormat(QtCore.Qt.RichText)
+        transforms_label.setTextFormat(Qt.RichText)
         transforms_label.setStyleSheet("font-size: 10px; margin-top: 8px; padding: 8px; background-color: palette(midlight); border-radius: 4px;")
         variables_layout.addWidget(transforms_label)
 
@@ -2102,7 +2110,7 @@ class SuffixOptionsPage(OptionsPage):
                 name = template.get("name", "Unnamed")
                 self.template_list.addItem(name)
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
             # Select first template by default
             if self.template_list.count() > 0:
@@ -2117,7 +2125,7 @@ class SuffixOptionsPage(OptionsPage):
         try:
             current_item = self.template_list.currentItem()
             if current_item:
-                template_data = current_item.data(QtCore.Qt.UserRole)
+                template_data = current_item.data(Qt.UserRole)
                 if template_data:
                     formula = template_data.get("formula", "")
                     self.update_preview_with_formula(formula)
@@ -2141,7 +2149,7 @@ class SuffixOptionsPage(OptionsPage):
                 # Add to list
                 self.template_list.addItem(template_data["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template_data)
+                item.setData(Qt.UserRole, template_data)
 
                 # Save templates
                 self.save_templates_from_list()
@@ -2157,7 +2165,7 @@ class SuffixOptionsPage(OptionsPage):
             if not current_item:
                 return
 
-            template_data = current_item.data(QtCore.Qt.UserRole)
+            template_data = current_item.data(Qt.UserRole)
             dialog = TemplateEditorDialog(template_data, parent=self)
 
             if dialog.exec_() == QtWidgets.QDialog.Accepted:
@@ -2172,7 +2180,7 @@ class SuffixOptionsPage(OptionsPage):
 
                 # Update list item
                 current_item.setText(updated_data["name"])
-                current_item.setData(QtCore.Qt.UserRole, updated_data)
+                current_item.setData(Qt.UserRole, updated_data)
 
                 # Save templates
                 self.save_templates_from_list()
@@ -2189,7 +2197,7 @@ class SuffixOptionsPage(OptionsPage):
                 return
 
             current_item = self.template_list.currentItem()
-            template_data = current_item.data(QtCore.Qt.UserRole)
+            template_data = current_item.data(Qt.UserRole)
             template_name = template_data.get("name", "Unnamed")
 
             reply = QtWidgets.QMessageBox.question(
@@ -2220,7 +2228,7 @@ class SuffixOptionsPage(OptionsPage):
                 for template in DEFAULT_TEMPLATES:
                     self.template_list.addItem(template["name"])
                     item = self.template_list.item(self.template_list.count() - 1)
-                    item.setData(QtCore.Qt.UserRole, template)
+                    item.setData(Qt.UserRole, template)
 
                 self.save_templates_from_list()
                 log.info("Suffix Appender: Reset templates to defaults")
@@ -2233,7 +2241,7 @@ class SuffixOptionsPage(OptionsPage):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -2257,7 +2265,7 @@ class SuffixOptionsPage(OptionsPage):
             templates = []
             for i in range(self.template_list.count()):
                 item = self.template_list.item(i)
-                template_data = item.data(QtCore.Qt.UserRole)
+                template_data = item.data(Qt.UserRole)
                 if template_data:
                     templates.append(template_data)
 
@@ -2356,7 +2364,7 @@ class SuffixOptionsPage(OptionsPage):
             for template in valid_templates:
                 self.template_list.addItem(template["name"])
                 item = self.template_list.item(self.template_list.count() - 1)
-                item.setData(QtCore.Qt.UserRole, template)
+                item.setData(Qt.UserRole, template)
 
             # Save to settings and JSON file
             self.save_templates_from_list()
@@ -2805,6 +2813,7 @@ def create_preset_action(preset_name, preset_formula):
     class SuffixPresetAction(BaseAction):
         """Apply a specific preset formula - reads formula dynamically from settings"""
         NAME = preset_name  # Removed "Preset:" prefix in v2.2.0 for cleaner menu
+        TITLE = preset_name
         MENU = ("Suffix",)
 
         def __init__(self):
@@ -3357,7 +3366,7 @@ class SuffixAction(BaseAction):
             return False
 
 def enable(api):
-    # Template actions from JSON / Picard settings / defaults
+    use_v3 = hasattr(api, 'register_cluster_action')
     templates = load_templates_from_sources()
     templates = sorted(templates, key=lambda t: t.get("name", "").lower())
     for template in templates:
@@ -3365,11 +3374,18 @@ def enable(api):
         template_formula = template.get("formula", "")
         if template_formula:
             ActionClass = create_preset_action(template_name, template_formula)
-            action = ActionClass()
-            register_album_action(action)
-            register_track_action(action)
-            register_file_action(action)
-            register_cluster_action(action)
+            if use_v3:
+                for fn_name in ('register_album_action', 'register_track_action',
+                                'register_file_action', 'register_cluster_action'):
+                    fn = getattr(api, fn_name, None)
+                    if fn:
+                        fn(ActionClass)
+            else:
+                action = ActionClass()
+                register_album_action(action)
+                register_track_action(action)
+                register_file_action(action)
+                register_cluster_action(action)
     log.info(f"Suffix Appender: Registered {len(templates)} template actions")
 
     register_options_page(SuffixOptionsPage)
