@@ -1,6 +1,6 @@
 # Suffix Appender Plugin
 
-**Version:** 2.4.1
+**Version:** 2.4.2
 **Author:** rpmzine + contributors
 **API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** MIT
@@ -333,6 +333,11 @@ This plugin works well with:
 - Other metadata enhancement plugins
 
 ## Changelog
+
+### Version 2.4.2
+
+- **Bug Fix**: `<bits_per_sample>`, `<sample_rate>`, and `<channels>` variables now resolve correctly. The stored key alias list tried `~bits_per_sample` and `bitspersample` but never `bits_per_sample` (the name Audio File Info writes, and the bare form Picard 3.0 exposes). The resolver now falls back to the bare key name and its tilde variant after exhausting the alias list, so existing saved settings are fixed automatically without requiring a reset.
+- Updated default key aliases for new installs to include both tilde and non-tilde forms.
 
 ### Version 2.4.1
 

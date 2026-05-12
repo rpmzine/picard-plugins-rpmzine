@@ -2,7 +2,7 @@
 PLUGIN_NAME = "Suffix Appender"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Append custom, formula-based suffixes to Album, Track Title, Comment, Disc Subtitle, or Work fields via context menu. Uses JSON templates with metadata variables (country, format, bit depth, sample rate, bitstream codec, etc.). Includes EP/Single/Vinyl/CD detection."
-PLUGIN_VERSION = "2.4.1"
+PLUGIN_VERSION = "2.4.2"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
@@ -46,9 +46,9 @@ TextOption("setting", "suffix_appender_key_aliases", json.dumps({
     "format": ["media", "releaseformat", "format"],
     "file_format": ["~format", "media"],
     "catalognumber": ["catalognumber", "catalognum"],
-    "bits_per_sample": ["~bits_per_sample", "bitspersample"],
-    "sample_rate": ["~sample_rate", "samplerate"],
-    "channels": ["~channels"],
+    "bits_per_sample": ["~bits_per_sample", "bits_per_sample", "bitspersample"],
+    "sample_rate": ["~sample_rate", "sample_rate", "samplerate"],
+    "channels": ["~channels", "channels"],
     "releasedate": ["date", "releasedate", "originaldate"],
     "label": ["label", "publisher"],
     "year": ["date", "year"],
@@ -350,7 +350,20 @@ class FormulaRenderer:
                 result = str(value).strip()
                 self._value_cache[key] = result
                 return result
-        
+
+        # Implicit fallbacks: try the bare key name and its tilde variant.
+        # Covers cases where the stored alias list is outdated (e.g. missing
+        # "bits_per_sample" when Audio File Info writes it without the tilde),
+        # and Picard 3.0 where tilde fields may only be exposed bare.
+        alias_set = set(aliases)
+        for fallback in (key, f"~{key}"):
+            if fallback not in alias_set:
+                value = self.metadata.get(fallback)
+                if value:
+                    result = str(value).strip()
+                    self._value_cache[key] = result
+                    return result
+
         self._value_cache[key] = ""
         return ""
     
