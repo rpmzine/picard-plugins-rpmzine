@@ -1,6 +1,6 @@
 # Suffix Appender Plugin
 
-**Version:** 2.4.0
+**Version:** 2.4.1
 **Author:** rpmzine + contributors
 **API Versions:** 2.10, 2.11, 2.12, 2.13, 3.0
 **License:** MIT
@@ -333,6 +333,10 @@ This plugin works well with:
 - Other metadata enhancement plugins
 
 ## Changelog
+
+### Version 2.4.1
+
+- **Critical Bug Fix (Picard 3.0)**: Suffix now saves to file metadata. In Picard 3.0, Album objects expose `.files` directly instead of `.tracks → .linked_files`. The plugin was only modifying the album-level metadata dict (updating the UI title) but never reaching the individual `file.metadata` dicts that Picard writes to disk.
 
 ### Version 2.4.0
 
