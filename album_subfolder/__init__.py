@@ -8,7 +8,7 @@ PLUGIN_DESCRIPTION = (
     "from the source folder into the subfolder. "
     "Requires 'Move additional files' to be DISABLED in Picard options."
 )
-PLUGIN_VERSION = "2.3.0"
+PLUGIN_VERSION = "2.3.1"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
@@ -67,6 +67,19 @@ def _ask_move():
         Yes,
     )
     return reply == Yes
+
+
+def _pre_save_decision(file):
+    """Show the dialog before the first file in a batch saves (Picard 3.0 only)."""
+    global _batch_decision
+    with _lock:
+        ask = (_batch_decision is None)
+        if ask:
+            _batch_decision = False  # block concurrent calls from also asking
+    if ask:
+        decided = _ask_move()
+        with _lock:
+            _batch_decision = decided
 
 
 def _snapshot_extras(source_dir):
@@ -215,6 +228,7 @@ def enable(api):
     if _has_register('register_file_pre_save_processor',
                      'picard.extension_points.event_hooks', 'picard.file'):
         register_file_pre_save_processor(_on_file_loaded)
+        register_file_pre_save_processor(_pre_save_decision)
     else:
         register_file_post_load_processor(_on_file_loaded)
     register_file_post_save_processor(_album_subfolder)
