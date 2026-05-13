@@ -1,8 +1,8 @@
 uuid = "723edd81-2dcf-473a-be28-4fd7fa004ce8"
 name = "Suffix Appender"
-description = "Append custom, formula-based suffixes to Album, Track Title, Comment, Disc Subtitle, or Work fields via context menu. Uses JSON templates with metadata variables (country, format, bit depth, sample rate, bitstream codec, etc.). Includes EP/Single/Vinyl/CD detection."
+description = "Appends formula-based suffixes to title fields via context menu. Uses JSON templates with metadata variables (country, format, bit depth, sample rate, codec). Includes EP/Single/Vinyl/CD detection."
 api = ["3.0"]
 authors = ["rpmzine"]
 license = "MIT"
 license_url = "https://opensource.org/licenses/MIT"
-repository = "https://github.com/rpmzine/picard-plugins-rpmzine"
+repository = "https://github.com/rpmzine/picard-plugin-suffix-appender"

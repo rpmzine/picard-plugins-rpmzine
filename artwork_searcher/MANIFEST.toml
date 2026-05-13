@@ -5,4 +5,4 @@ api = ["3.0"]
 authors = ["rpmzine"]
 license = "GPL-2.0-or-later"
 license_url = "https://www.gnu.org/licenses/gpl-2.0.html"
-repository = "https://github.com/rpmzine/picard-plugins-rpmzine"
+repository = "https://github.com/rpmzine/picard-plugin-artwork-searcher"

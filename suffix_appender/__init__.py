@@ -2,7 +2,7 @@
 PLUGIN_NAME = "Suffix Appender"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Append custom, formula-based suffixes to Album, Track Title, Comment, Disc Subtitle, or Work fields via context menu. Uses JSON templates with metadata variables (country, format, bit depth, sample rate, bitstream codec, etc.). Includes EP/Single/Vinyl/CD detection."
-PLUGIN_VERSION = "2.4.2"
+PLUGIN_VERSION = "2.4.3"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
@@ -3063,33 +3063,23 @@ class SuffixAction(BaseAction):
                     yield (obj, obj.metadata)
             elif class_name in ("Album",):
                 # For albums, include album metadata AND each file's metadata.
-                # V3: Album exposes .files directly.
-                # V2: traverse .tracks → .linked_files.
+                # Album.tracks → Track.files (V3) or Track.linked_files (V2).
+                # Album has no flat .files attribute in any Picard version.
                 if hasattr(obj, 'metadata'):
                     log.debug(f"Suffix Appender: Processing Album metadata")
-                    yield (obj, obj.metadata)  # Album metadata for album title
-                if hasattr(obj, 'files'):
-                    # Picard 3.0 V3 path
-                    for file_obj in obj.files:
+                    yield (obj, obj.metadata)
+                for track in getattr(obj, "tracks", []):
+                    # V3: track.files  /  V2: track.linked_files
+                    if hasattr(track, 'files'):
+                        track_files = track.files
+                    else:
+                        track_files = getattr(track, "linked_files", [])
+                    for file_obj in track_files:
                         file_id = id(file_obj)
                         if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
                             processed_objects.add(file_id)
-                            log.debug(f"Suffix Appender: Processing File metadata (V3)")
+                            log.debug(f"Suffix Appender: Processing File metadata (via track)")
                             yield (file_obj, file_obj.metadata)
-                else:
-                    # Picard 2.x V2 path
-                    for track in getattr(obj, "tracks", []):
-                        track_id = id(track)
-                        if track_id not in processed_objects and hasattr(track, 'metadata'):
-                            processed_objects.add(track_id)
-                            log.debug(f"Suffix Appender: Processing Track metadata")
-                            yield (track, track.metadata)
-                            for file_obj in getattr(track, "linked_files", []):
-                                file_id = id(file_obj)
-                                if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
-                                    processed_objects.add(file_id)
-                                    log.debug(f"Suffix Appender: Processing File metadata (V2)")
-                                    yield (file_obj, file_obj.metadata)
             elif class_name in ("Cluster",):
                 for file_obj in getattr(obj, "files", []):
                     file_id = id(file_obj)
@@ -3204,32 +3194,23 @@ class SuffixAction(BaseAction):
                 if hasattr(obj, 'metadata'):
                     yield obj.metadata
             elif class_name in ("Album",):
-                # V3: Album exposes .files directly. V2: .tracks → .linked_files.
+                # Album.tracks → Track.files (V3) or Track.linked_files (V2).
+                # Album has no flat .files attribute in any Picard version.
                 if hasattr(obj, 'metadata'):
                     log.debug(f"Suffix Appender: Processing Album metadata")
                     yield obj.metadata
-                if hasattr(obj, 'files'):
-                    # Picard 3.0 V3 path
-                    for file_obj in obj.files:
+                for track in getattr(obj, "tracks", []):
+                    # V3: track.files  /  V2: track.linked_files
+                    if hasattr(track, 'files'):
+                        track_files = track.files
+                    else:
+                        track_files = getattr(track, "linked_files", [])
+                    for file_obj in track_files:
                         file_id = id(file_obj)
                         if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
                             processed_objects.add(file_id)
-                            log.debug(f"Suffix Appender: Processing File metadata (V3)")
+                            log.debug(f"Suffix Appender: Processing File metadata (via track)")
                             yield file_obj.metadata
-                else:
-                    # Picard 2.x V2 path
-                    for track in getattr(obj, "tracks", []):
-                        track_id = id(track)
-                        if track_id not in processed_objects and hasattr(track, 'metadata'):
-                            processed_objects.add(track_id)
-                            log.debug(f"Suffix Appender: Processing Track metadata")
-                            yield track.metadata
-                            for file_obj in getattr(track, "linked_files", []):
-                                file_id = id(file_obj)
-                                if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
-                                    processed_objects.add(file_id)
-                                    log.debug(f"Suffix Appender: Processing File metadata (V2)")
-                                    yield file_obj.metadata
             elif class_name in ("Cluster",):
                 for file_obj in getattr(obj, "files", []):
                     file_id = id(file_obj)

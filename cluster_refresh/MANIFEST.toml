@@ -5,4 +5,4 @@ api = ["3.0"]
 authors = ["rpmzine"]
 license = "MIT"
 license_url = "https://opensource.org/licenses/MIT"
-repository = "https://github.com/rpmzine/picard-plugins-rpmzine"
+repository = "https://github.com/rpmzine/picard-plugin-cluster-refresh"
