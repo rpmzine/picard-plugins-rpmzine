@@ -8,7 +8,7 @@ PLUGIN_DESCRIPTION = (
     "from the source folder into the subfolder. "
     "Requires 'Move additional files' to be DISABLED in Picard options."
 )
-PLUGIN_VERSION = "2.3.1"
+PLUGIN_VERSION = "2.3.2"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
@@ -95,6 +95,14 @@ def _snapshot_extras(source_dir):
     except Exception as e:
         log.error("Album Subfolder: snapshot of %r failed — %s", source_dir, e)
     return extra_files, extra_dirs
+
+
+def _try_remove_empty_dir(path):
+    """Remove directory only if empty; silently no-ops if files remain."""
+    import contextlib
+    with contextlib.suppress(OSError):
+        os.rmdir(path)
+        log.debug("Album Subfolder: removed empty directory %r", path)
 
 
 def _sweep(source_dir, target_dir, extra_files, extra_dirs):
@@ -215,6 +223,7 @@ def _album_subfolder(file):
                 s = _album_state.pop(key, None)
             if s and s['source_dir']:
                 _sweep(s['source_dir'], target_dir, s['extra_files'], s['extra_dirs'])
+                _try_remove_empty_dir(s['source_dir'])
 
     except Exception as e:
         log.error("Album Subfolder: failed to organise %r — %s", file.filename, e)
