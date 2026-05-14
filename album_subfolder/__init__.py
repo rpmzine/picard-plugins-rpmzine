@@ -8,7 +8,7 @@ PLUGIN_DESCRIPTION = (
     "from the source folder into the subfolder. "
     "Requires 'Move additional files' to be DISABLED in Picard options."
 )
-PLUGIN_VERSION = "2.3.2"
+PLUGIN_VERSION = "2.3.3"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "GPL-2.0"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-2.0.html"
@@ -35,6 +35,14 @@ _ADDITIONAL_EXTS = {
     '.cue', '.log', '.txt', '.nfo', '.pdf',
     '.md5', '.ffp', '.sha', '.sha256',
     '.m3u', '.m3u8',
+}
+
+# Only these companion directory names are swept into the album subfolder.
+# Arbitrary directories (other album folders, etc.) are never moved.
+_COMPANION_DIRS = {
+    'artwork', 'art', 'scans', 'scan', 'covers', 'cover',
+    'booklet', 'booklets', 'extras', 'bonus', 'liner notes',
+    'images', 'photos',
 }
 
 _lock = threading.Lock()
@@ -88,7 +96,9 @@ def _snapshot_extras(source_dir):
         for name in os.listdir(source_dir):
             path = os.path.join(source_dir, name)
             if os.path.isdir(path):
-                extra_dirs.append(name)
+                # Only sweep known companion directories, never arbitrary folders.
+                if name.lower() in _COMPANION_DIRS:
+                    extra_dirs.append(name)
             elif (os.path.isfile(path)
                   and os.path.splitext(name)[1].lower() in _ADDITIONAL_EXTS):
                 extra_files.append(name)
