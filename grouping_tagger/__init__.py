@@ -2,7 +2,7 @@
 PLUGIN_NAME = "Grouping Tagger"
 PLUGIN_AUTHOR = "rpmzine"
 PLUGIN_DESCRIPTION = "Tag GROUPING field with customizable source and format tags via context menu. Uses JSON templates with detection variables (Vinyl/CD/Digital source, format, quality tier, channels, bootleg, remaster). Includes configurable fixed tags and auto-detection matrix."
-PLUGIN_VERSION = "3.1.2"
+PLUGIN_VERSION = "3.1.3"
 PLUGIN_API_VERSIONS = ["2.10", "2.11", "2.12", "2.13", "3.0"]
 PLUGIN_LICENSE = "MIT"
 PLUGIN_LICENSE_URL = "https://opensource.org/licenses/MIT"
@@ -2080,7 +2080,7 @@ class GroupingActionAuto(BaseAction):
                     if track_id not in processed_objects and hasattr(track, 'metadata'):
                         processed_objects.add(track_id)
                         yield (track, track.metadata)
-                        for file_obj in getattr(track, "linked_files", []):
+                        for file_obj in (getattr(track, "files", None) or getattr(track, "linked_files", [])):
                             file_id = id(file_obj)
                             if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
                                 processed_objects.add(file_id)
@@ -2238,7 +2238,7 @@ def create_template_action(template_name, template_string, divider):
                         if track_id not in processed_objects and hasattr(track, 'metadata'):
                             processed_objects.add(track_id)
                             yield (track, track.metadata)
-                            for file_obj in getattr(track, "linked_files", []):
+                            for file_obj in (getattr(track, "files", None) or getattr(track, "linked_files", [])):
                                 file_id = id(file_obj)
                                 if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
                                     processed_objects.add(file_id)
@@ -2324,7 +2324,7 @@ def create_fixed_action(tag_name, tag_value):
                         if track_id not in processed_objects and hasattr(track, 'metadata'):
                             processed_objects.add(track_id)
                             yield (track, track.metadata)
-                            for file_obj in getattr(track, "linked_files", []):
+                            for file_obj in (getattr(track, "files", None) or getattr(track, "linked_files", [])):
                                 file_id = id(file_obj)
                                 if file_id not in processed_objects and hasattr(file_obj, 'metadata'):
                                     processed_objects.add(file_id)
