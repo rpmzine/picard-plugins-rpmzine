@@ -1,5 +1,6 @@
 {
   "dotnetAcquisitionExtension.sharedExistingDotnetPath": "/usr/local/share/dotnet/dotnet",
-  "todo-tree.ripgrep.ripgrepArgs": ["--no-ignore"]
+  "todo-tree.ripgrep.ripgrep": "/opt/homebrew/bin/rg",
+  "todo-tree.ripgrep.ripgrepArgs": "--max-columns=1000 --no-config",
   "flake8.args": []
 }
